@@ -1,11 +1,11 @@
 extern crate libterminal_cribbage;
 
 
-use libterminal_cribbage::cards::{Card, Suit, Rank};
+use libterminal_cribbage::cards::Deck;
 
 
 fn main() {
-    let c = Card { rank: Rank::Ace, suit: Suit::Clubs };
+    let d = Deck::new();
 
-    println!("C: {}", c);
+    println!("D: {}", d);
 }
