@@ -1,39 +1,67 @@
 use std::fmt;
 
+
+#[allow(dead_code)]
 #[derive(Debug)]
-pub struct Card {
-    value: u8,
-    face: char,
-    suit: char,
+pub enum Rank {
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Jack,
+    Queen,
+    King,
+    Ace,
 }
 
 
-impl Card {
-    pub fn new(face: &str, suit: char) -> Card {
-        let value = match face {
-            "2" => 2,
-            "3" => 3,
-            "4" => 4,
-            "5" => 5,
-            "6" => 6,
-            "7" => 7,
-            "8" => 8,
-            "9" => 9,
-            "10" => 10,
-            "J" => 10,
-            "Q" => 10,
-            "K" => 10,
-            "A" => 1,
-            _ => 0,
-        }
-    }
+#[allow(dead_code)]
+#[derive(Debug)]
+pub enum Suit {
+    Hearts,
+    Clubs,
+    Diamonds,
+    Spades,
+}
+
+
+#[derive(Debug)]
+pub struct Card {
+    pub rank: Rank,
+    pub suit: Suit,
 }
 
 
 impl fmt::Display for Card {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "[{}{}]", self.face, self.suit)?;
+        let rank_str = match self.rank {
+            Rank::Two => "2",
+            Rank::Three => "3",
+            Rank::Four => "4",
+            Rank::Five => "5",
+            Rank::Six => "6",
+            Rank::Seven => "7",
+            Rank::Eight => "8",
+            Rank::Nine => "9",
+            Rank::Ten => "10",
+            Rank::Jack => "J",
+            Rank::Queen => "Q",
+            Rank::King => "K",
+            Rank::Ace => "A",
+        };
 
-        Ok(())
+        let suit_char = match self.suit {
+            Suit::Hearts => '\u{2665}',
+            Suit::Clubs => '\u{2663}',
+            Suit::Diamonds => '\u{2666}',
+            Suit::Spades => '\u{2660}',
+        };
+
+        write!(formatter, "[{}{}]", rank_str, suit_char)
     }
 }
