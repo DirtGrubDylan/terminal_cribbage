@@ -1,6 +1,14 @@
 [package]
-name = "terminal_cribbage"
-version = "0.1.0"
+name = "Terminal Cribbage"
+version = "0.0.1"
 authors = ["Dylan Hicks <dman1366@gmail.com>"]
+
+[lib]
+name = "libterminal_cribbage"
+path = "src/lib.rs"
+
+[[bin]]
+name = "terminal_cribbage"
+path = "src/main.rs"
 
 [dependencies]
