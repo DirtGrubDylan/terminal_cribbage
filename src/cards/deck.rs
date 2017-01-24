@@ -1,7 +1,8 @@
 use std::fmt;
 
-use cards::card::{Card, Rank, Suit};
+use rand::{self, Rng};
 
+use cards::card::{Card, Rank, Suit};
 
 #[derive(Debug)]
 pub struct Deck(pub Vec<Card>);
@@ -23,11 +24,14 @@ impl Deck {
                                     Rank::Jack,
                                     Rank::Queen,
                                     Rank::King];
-        let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Spades, Suit::Diamonds, Suit::Hearts];
+        let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
         for suit in suits.into_iter() {
             for &rank in ranks.iter() {
-                cards.push(Card { rank: rank, suit: suit });
+                cards.push(Card {
+                    rank: rank,
+                    suit: suit,
+                });
             }
         }
 
@@ -35,6 +39,19 @@ impl Deck {
     }
 }
 
+
+impl Deck {
+    pub fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+
+        rng.shuffle(&mut self.0);
+    }
+
+
+    pub fn deal(&mut self) -> Option<Card> {
+        self.0.pop()
+    }
+}
 
 
 impl fmt::Display for Deck {
