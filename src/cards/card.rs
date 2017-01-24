@@ -1,7 +1,6 @@
 use std::fmt;
 
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum Rank {
     Two,
@@ -20,7 +19,6 @@ pub enum Rank {
 }
 
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum Suit {
     Hearts,
@@ -30,7 +28,7 @@ pub enum Suit {
 }
 
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Card {
     pub rank: Rank,
     pub suit: Suit,
