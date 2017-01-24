@@ -5,7 +5,9 @@ use libterminal_cribbage::cards::Deck;
 
 
 fn main() {
-    let d = Deck::new();
+    let mut d = Deck::new();
 
-    println!("D: {}", d);
+    for _ in 0..100000 {
+        d = Deck::new();
+    }
 }
