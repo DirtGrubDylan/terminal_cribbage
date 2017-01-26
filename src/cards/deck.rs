@@ -9,7 +9,7 @@ use cards::{Card, Rank, Suit};
 /// This wrapper is so the vector can be treated like an actual deck of [`Card`]s
 ///
 /// [`Card`]: struct.Card.html
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Deck(Vec<Card>);
 
 
@@ -89,13 +89,13 @@ impl Deck {
     /// # Examples
     ///
     /// ```
-    /// use libterminal_cribbage::cards::Deck;
+    /// use libterminal_cribbage::cards::{Deck, Card, Rank, Suit};
     ///
     /// let mut deck = Deck::new();
     ///
-    /// let dealt_card = deck.deal().unwrap();
+    /// let dealt_card = deck.deal();
     ///
-    /// println!("Dealt card: {}", dealt_card);
+    /// assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Spades)));
     /// ```
     pub fn deal(&mut self) -> Option<Card> {
         self.0.pop()
@@ -110,5 +110,89 @@ impl fmt::Display for Deck {
         }
 
         write!(formatter, "")
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use cards::{Card, Rank, Suit};
+
+    #[test]
+    fn test_new() {
+        let test_deck = Deck::new();
+
+        let ranks: Vec<Rank> = vec![Rank::Ace,
+                                    Rank::Two,
+                                    Rank::Three,
+                                    Rank::Four,
+                                    Rank::Five,
+                                    Rank::Six,
+                                    Rank::Seven,
+                                    Rank::Eight,
+                                    Rank::Nine,
+                                    Rank::Ten,
+                                    Rank::Jack,
+                                    Rank::Queen,
+                                    Rank::King];
+        let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
+
+        for suit in suits.into_iter() {
+            for &rank in ranks.iter() {
+                assert!(test_deck.0.contains(&Card::new(rank, suit)));
+            }
+        }
+
+        assert!(test_deck.0.starts_with(&[Card::new(Rank::Ace, Suit::Clubs)]));
+        assert!(test_deck.0.ends_with(&[Card::new(Rank::King, Suit::Spades)]));
+        assert_eq!(test_deck.0.len(), 52);
+    }
+
+
+    #[test]
+    fn test_eq() {
+        let test_deck = Deck::new();
+        let other_test_deck = Deck::new();
+
+        assert_eq!(test_deck, other_test_deck);
+    }
+
+
+    #[test]
+    #[should_panic]
+    fn test_shuffle() {
+        let mut test_deck = Deck::new();
+        let mut other_test_deck = Deck::new();
+
+        test_deck.shuffle();
+
+        assert_eq!(test_deck, other_test_deck);
+
+        other_test_deck.shuffle();
+
+        assert_eq!(test_deck, other_test_deck);
+    }
+
+
+    #[test]
+    fn test_deal() {
+        let mut test_deck = Deck::new();
+
+        let mut dealt_card = test_deck.deal();
+
+        assert_eq!(test_deck.0.len(), 51);
+        assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Spades)));
+
+        for _ in 0..51 {
+            dealt_card = test_deck.deal();
+        }
+
+        assert!(test_deck.0.is_empty());
+        assert_eq!(dealt_card, Some(Card::new(Rank::Ace, Suit::Clubs)));
+
+        dealt_card = test_deck.deal();
+
+        assert_eq!(dealt_card, None);
     }
 }

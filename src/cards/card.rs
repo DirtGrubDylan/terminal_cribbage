@@ -33,7 +33,7 @@ pub enum Suit {
 ///
 /// [`Rank`]: enum.Rank.html
 /// [`Suit`]: enum.Suit.html
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Card {
     pub rank: Rank,
     pub suit: Suit,
@@ -43,7 +43,7 @@ impl Card {
     /// Constructs a new `Card`.
     ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use libterminal_cribbage::cards::{Card, Rank, Suit};
     ///
@@ -52,7 +52,10 @@ impl Card {
     /// println!("Played card: {}", playing_card);
     /// ```
     pub fn new(rank: Rank, suit: Suit) -> Card {
-        Card { rank: rank, suit:suit }
+        Card {
+            rank: rank,
+            suit: suit,
+        }
     }
 }
 
@@ -82,5 +85,19 @@ impl fmt::Display for Card {
         };
 
         write!(formatter, "[{}{}]", rank_str, suit_char)
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let test_card = Card::new(Rank::Ace, Suit::Clubs);
+
+        assert_eq!(test_card.rank, Rank::Ace);
+        assert_eq!(test_card.suit, Suit::Clubs);
     }
 }
