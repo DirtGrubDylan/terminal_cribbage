@@ -1,7 +1,7 @@
 use std::fmt;
 
 /// `Rank` is a type the represents the rank of a playing card.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Rank {
     Ace,
     Two,
@@ -20,7 +20,7 @@ pub enum Rank {
 
 
 /// `Suit` is a type the represents the suit of a playing card.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Suit {
     Hearts,
     Clubs,

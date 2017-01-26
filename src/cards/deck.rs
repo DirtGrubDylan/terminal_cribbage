@@ -10,7 +10,7 @@ use cards::{Card, Rank, Suit};
 ///
 /// [`Card`]: struct.Card.html
 #[derive(Debug)]
-pub struct Deck(pub Vec<Card>);
+pub struct Deck(Vec<Card>);
 
 
 impl Deck {

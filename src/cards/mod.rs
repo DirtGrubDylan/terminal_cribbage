@@ -13,6 +13,30 @@
 //! and [`Suit`]:
 //!
 //! ```
+//! use libterminal_cribbage::cards::{Card, Rank, Suit};
+//!
+//! let playing_card = Card::new(Rank::Ace, Suit::Clubs);
+//! let other_playing_card = Card::new(Rank::Eight, Suit::Clubs);
+//!
+//! assert_eq!(playing_card.suit, other_playing_card.suit);
+//!
+//! let score = match playing_card.rank {
+//!     Rank::Ace => 1,
+//!     Rank::Two => 2,
+//!     Rank::Three => 3,
+//!     Rank::Four => 4,
+//!     Rank::Five => 5,
+//!     Rank::Six => 6,
+//!     Rank::Seven => 7,
+//!     Rank::Eight => 8,
+//!     Rank::Nine => 9,
+//!     Rank::Ten => 10,
+//!     Rank::Jack => 10,
+//!     Rank::Queen => 10,
+//!     Rank::King => 10,
+//! };
+//!
+//! assert_eq!(score, 1);
 //! ```
 //!
 //! ## Deck and Hand
