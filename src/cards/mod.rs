@@ -5,11 +5,11 @@
 //!
 //! ## Card, Rank, and Suit
 //!
-//! With all card games, using the standard playing cards, each [`Card`] references a [`Rank`] and a 
-//! [`Suit`]. `libterminal_cribbage::cards` provides the struct [`Card`], and two enums, [`Rank`] 
+//! With all card games, using the standard playing cards, each [`Card`] references a [`Rank`] and a
+//! [`Suit`]. `libterminal_cribbage::cards` provides the struct [`Card`], and two enums, [`Rank`]
 //! and [`Suit`], in order to ease the use of organization and comparrisons.
 //!
-//! For example, in Cribbage, when scoring, each [`Card`] must be evaluated based on it's [`Rank`] 
+//! For example, in Cribbage, when scoring, each [`Card`] must be evaluated based on it's [`Rank`]
 //! and [`Suit`]:
 //!
 //! ```
@@ -41,7 +41,7 @@
 //!
 //! ## Deck and Hand
 //!
-//! In Cribbage there are two different types of [`Card`] piles. These are used through out the 
+//! In Cribbage there are two different types of [`Card`] piles. These are used through out the
 //! game, and to help with this `libterminal_cribbage::cards` comes with two handy structs, [`Deck`]
 //! and `Hand`, which wrap these piles. The wrappers provide a way to reduce the number of calls
 //! and collections for compiling and manipulating [`Card`] piles.
@@ -52,6 +52,7 @@
 //! use libterminal_cribbage::cards::Deck;
 //!
 //! let mut deck = Deck::new();
+//! let mut hand = Hand::new();
 //!
 //! println!("Unshuffled deck of cards: {}", deck);
 //!
@@ -68,7 +69,7 @@
 //!
 //! ## Dealing and Discarding
 //!
-//! Since Cribbage involves a lot of dealing and discarding, you may see this functions appear all 
+//! Since Cribbage involves a lot of dealing and discarding, you may see this functions appear all
 //! over the crate. For example, after dealing out a hand, a player must discard two [`Card`]s:
 //!
 //! ```
@@ -80,6 +81,7 @@
 //! [`Suit`]: enum.Suit.html
 
 pub use self::deck::Deck;
+pub use self::hand::Hand;
 pub use self::card::{Card, Rank, Suit};
 
 mod card;
