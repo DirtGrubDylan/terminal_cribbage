@@ -8,7 +8,7 @@ use cards::card::Card;
 ///
 /// [`Card`]: struct.Card.html
 #[derive(Debug, PartialEq)]
-pub struct Hand(Vec<Card>);
+pub struct Hand(pub Vec<Card>);
 
 
 impl Hand {
@@ -26,7 +26,9 @@ impl Hand {
     /// assert!(hand.0.is_empty());
     /// ```
     pub fn new() -> Hand {
-        Hand(Vec::new())
+        let card_vector: Vec<Card> = Vec::new();
+
+        Hand(card_vector)
     }
 
 
@@ -53,7 +55,6 @@ impl Hand {
     /// hand.add_card(Card::new(Rank::Two, Suit::Hearts));
     /// hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
     ///
-    /// assert_eq!(hand.0.len(), 7);
     /// assert_eq!(
     ///     hand.0,
     ///     vec![Card::new(Rank::Ace, Suit::Clubs),
@@ -65,26 +66,37 @@ impl Hand {
     ///          Card::new(Rank::Queen, Suit::Diamonds)]);
     /// ```
     pub fn add_card(&mut self, card: Card) {
-        self.0.push_back(card);
-        self.0.sort_by_key(|card| card.rank);
+        self.0.push(card);
+        self.0.sort();
     }
 
 
-    /// Constructs a new `Hand`.
+    /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
     ///
-    /// The `Hand` is constructed with the internal vector being new.
+    /// [`Card`]: struct.Card.html
     ///
     /// # Examples
     ///
     /// ```
-    /// use libterminal_cribbage::cards::Hand;
+    /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
     ///
-    /// let hand = Hand::new();
+    /// let mut hand = Hand::new();
     ///
-    /// assert!(hand.0.is_empty());
-    /// ```
-    pub fn discard(&mut self, index_of_card: usize) -> Option<Card> {
-        unimplemented!();
+    /// hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
+    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+    /// hand.add_card(Card::new(Rank::Two, Suit::Spades));
+    ///
+    /// let mut card = hand.discard(2);
+    ///
+    /// assert_eq!(card, Ok(Card::new(Rank::Three, Suit::Hearts)));
+    // / ```
+    pub fn discard(&mut self, index_of_card: usize) -> Result<Card, String> {
+        if index_of_card >= self.0.len() {
+            return Err("Out of Bounds!".to_string());
+        }
+
+        Ok(self.0.remove(index_of_card))
     }
 }
 
@@ -116,41 +128,49 @@ mod test {
 
     #[test]
     fn test_add_card() {
-        // let mut test_hand = Hand::new();
+        let mut hand = Hand::new();
 
-        // test_hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+        hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+        hand.add_card(Card::new(Rank::Four, Suit::Spades));
+        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Two, Suit::Spades));
+        hand.add_card(Card::new(Rank::Queen, Suit::Diamonds));
+        hand.add_card(Card::new(Rank::Two, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
 
-        // assert_eq!(test_hand.0, vec![Card::new(Rank::Ace, Suit::Clubs)]);
-
-        // test_hand.add_card(Card::new(Rank::Eight, Suit::Hearts));
-
-        // assert_eq!(
-        //     test_hand.0,
-        //     vec![Card::new(Rank::Ace, Suit::Clubs), Card::new(Rank::Eight, Suit::Hearts]));
-
-        unimplemented!();
+        assert_eq!(hand.0.len(), 7);
+        assert_eq!(hand.0,
+                   vec![Card::new(Rank::Ace, Suit::Clubs),
+                        Card::new(Rank::Two, Suit::Hearts),
+                        Card::new(Rank::Two, Suit::Spades),
+                        Card::new(Rank::Three, Suit::Hearts),
+                        Card::new(Rank::Four, Suit::Spades),
+                        Card::new(Rank::Ten, Suit::Clubs),
+                        Card::new(Rank::Queen, Suit::Diamonds)]);
     }
 
 
     #[test]
     fn test_discard() {
-        // let mut test_hand = Hand::new();
+        let mut hand = Hand::new();
 
-        // test_hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
-        // test_hand.add_card(Card::new(Rank::Eight, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+        hand.add_card(Card::new(Rank::Four, Suit::Spades));
+        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Two, Suit::Spades));
 
-        // let mut test_card = test_hand.discard();
+        let mut card = hand.discard(2);
 
-        // assert_eq!(test_card, Some(Card::new(Rank::Eight, Suit::Hearts)));
-        // assert_eq!(test_hand.0, vec![Card::new(Rank::Ace, Suit::Clubs)]);
+        assert_eq!(card, Ok(Card::new(Rank::Three, Suit::Hearts)));
 
-        // test_card = test_hand.discard();
+        for _ in 0..3 {
+            card = hand.discard(0);
+        }
 
-        // assert_eq!(test_card, Some(Card::new(Rank::Ace, Suit::Clubs)));
-        // assert!(test_hand.0.is_empty());
+        assert_eq!(card, Ok(Card::new(Rank::Four, Suit::Spades)));
 
-        // test_card = test_hand.discard();
-        // assert_eq!(test_card, None);
-        unimplemented!();
+        card = hand.discard(0);
+
+        assert!(card.is_err());
     }
 }

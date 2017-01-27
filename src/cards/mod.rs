@@ -49,7 +49,7 @@
 //! For example, [`Deck`] provides a way to create a new deck of [`Card`]s, and shuffle them:
 //!
 //! ```
-//! use libterminal_cribbage::cards::Deck;
+//! use libterminal_cribbage::cards::{Deck, Hand};
 //!
 //! let mut deck = Deck::new();
 //! let mut hand = Hand::new();

@@ -35,8 +35,8 @@ pub enum Suit {
 /// [`Suit`]: enum.Suit.html
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Card {
-    rank: Rank,
-    suit: Suit,
+    pub rank: Rank,
+    pub suit: Suit,
 }
 
 impl Card {
