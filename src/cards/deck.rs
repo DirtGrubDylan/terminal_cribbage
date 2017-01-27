@@ -10,7 +10,7 @@ use cards::{Card, Rank, Suit};
 ///
 /// [`Card`]: struct.Card.html
 #[derive(Debug, PartialEq)]
-pub struct Deck(Vec<Card>);
+pub struct Deck(pub Vec<Card>);
 
 
 impl Deck {
@@ -160,18 +160,17 @@ mod test {
 
 
     #[test]
-    #[should_panic]
     fn test_shuffle() {
         let mut test_deck = Deck::new();
         let mut other_test_deck = Deck::new();
 
         test_deck.shuffle();
 
-        assert_eq!(test_deck, other_test_deck);
+        assert_eq!(test_deck == other_test_deck, false);
 
         other_test_deck.shuffle();
 
-        assert_eq!(test_deck, other_test_deck);
+        assert_eq!(test_deck == other_test_deck, false);
     }
 
 
