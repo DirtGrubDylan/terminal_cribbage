@@ -20,7 +20,7 @@ pub enum Rank {
 
 
 /// `Suit` is a type the represents the suit of a playing card.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Suit {
     Hearts,
     Clubs,
@@ -33,7 +33,7 @@ pub enum Suit {
 ///
 /// [`Rank`]: enum.Rank.html
 /// [`Suit`]: enum.Suit.html
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub struct Card {
     rank: Rank,
     suit: Suit,
