@@ -52,7 +52,6 @@
 //! use libterminal_cribbage::cards::{Deck, Hand};
 //!
 //! let mut deck = Deck::new();
-//! let mut hand = Hand::new();
 //!
 //! println!("Unshuffled deck of cards: {}", deck);
 //!
@@ -65,6 +64,30 @@
 //! `Hand` example:
 //!
 //! ```
+//! use libterminal_cribbage::cards::{Deck, Card, Hand, Rank, Suit};
+//!
+//! let mut hand = Hand::new();
+//!
+//! hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+//! hand.add_card(Card::new(Rank::Four, Suit::Spades));
+//! hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+//! hand.add_card(Card::new(Rank::Two, Suit::Spades));
+//! hand.add_card(Card::new(Rank::Queen, Suit::Diamonds));
+//! hand.add_card(Card::new(Rank::Two, Suit::Hearts));
+//! hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
+//!
+//! assert_eq!(
+//!     hand.0,
+//!     vec![Card::new(Rank::Ace, Suit::Clubs),
+//!          Card::new(Rank::Two, Suit::Hearts),
+//!          Card::new(Rank::Two, Suit::Spades),
+//!          Card::new(Rank::Three, Suit::Hearts),
+//!          Card::new(Rank::Four, Suit::Spades),
+//!          Card::new(Rank::Ten, Suit::Clubs),
+//!          Card::new(Rank::Queen, Suit::Diamonds)]);
+//!
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Four, Suit::Spades)));
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Ten, Suit::Clubs)));
 //! ```
 //!
 //! ## Dealing and Discarding
@@ -73,6 +96,20 @@
 //! over the crate. For example, after dealing out a hand, a player must discard two [`Card`]s:
 //!
 //! ```
+//! use libterminal_cribbage::cards::{Deck, Hand};
+//!
+//! let mut deck = Deck::new();
+//! let mut hand = Hand::new();
+//!
+//! deck.shuffle();
+
+//! for _ in 0..6 {
+//!     hand.add_card(deck.deal().unwrap());
+//! }
+//!
+//! println!("Hand of cards: {}", hand);
+//! println!("Discarded Card: {}", hand.discard(0).unwrap());
+//!
 //! ```
 //!
 //! [`Card`]: struct.Card.html
