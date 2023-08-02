@@ -12,7 +12,6 @@ use cards::{Card, Rank, Suit};
 #[derive(Debug, PartialEq)]
 pub struct Deck(pub Vec<Card>);
 
-
 impl Deck {
     /// Constructs a new `Deck`.
     ///
@@ -35,19 +34,21 @@ impl Deck {
     /// ```
     pub fn new() -> Deck {
         let mut cards: Vec<Card> = Vec::with_capacity(52);
-        let ranks: Vec<Rank> = vec![Rank::Ace,
-                                    Rank::Two,
-                                    Rank::Three,
-                                    Rank::Four,
-                                    Rank::Five,
-                                    Rank::Six,
-                                    Rank::Seven,
-                                    Rank::Eight,
-                                    Rank::Nine,
-                                    Rank::Ten,
-                                    Rank::Jack,
-                                    Rank::Queen,
-                                    Rank::King];
+        let ranks: Vec<Rank> = vec![
+            Rank::Ace,
+            Rank::Two,
+            Rank::Three,
+            Rank::Four,
+            Rank::Five,
+            Rank::Six,
+            Rank::Seven,
+            Rank::Eight,
+            Rank::Nine,
+            Rank::Ten,
+            Rank::Jack,
+            Rank::Queen,
+            Rank::King,
+        ];
         let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
         for suit in suits.into_iter() {
@@ -58,7 +59,6 @@ impl Deck {
 
         Deck(cards)
     }
-
 
     /// Shuffles the [`Card`]s in a `Deck` in place.
     ///
@@ -81,7 +81,6 @@ impl Deck {
         self.0.shuffle(&mut rng);
     }
 
-
     /// Deals a [`Card`] from the back of the `Deck`.
     ///
     /// [`Card`]: struct.Card.html
@@ -102,7 +101,6 @@ impl Deck {
     }
 }
 
-
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         for card in self.0.iter() {
@@ -113,7 +111,6 @@ impl fmt::Display for Deck {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -123,19 +120,21 @@ mod test {
     fn test_new() {
         let test_deck = Deck::new();
 
-        let ranks: Vec<Rank> = vec![Rank::Ace,
-                                    Rank::Two,
-                                    Rank::Three,
-                                    Rank::Four,
-                                    Rank::Five,
-                                    Rank::Six,
-                                    Rank::Seven,
-                                    Rank::Eight,
-                                    Rank::Nine,
-                                    Rank::Ten,
-                                    Rank::Jack,
-                                    Rank::Queen,
-                                    Rank::King];
+        let ranks: Vec<Rank> = vec![
+            Rank::Ace,
+            Rank::Two,
+            Rank::Three,
+            Rank::Four,
+            Rank::Five,
+            Rank::Six,
+            Rank::Seven,
+            Rank::Eight,
+            Rank::Nine,
+            Rank::Ten,
+            Rank::Jack,
+            Rank::Queen,
+            Rank::King,
+        ];
         let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
         for suit in suits.into_iter() {
@@ -144,11 +143,14 @@ mod test {
             }
         }
 
-        assert!(test_deck.0.starts_with(&[Card::new(Rank::Ace, Suit::Clubs)]));
-        assert!(test_deck.0.ends_with(&[Card::new(Rank::King, Suit::Spades)]));
+        assert!(test_deck
+            .0
+            .starts_with(&[Card::new(Rank::Ace, Suit::Clubs)]));
+        assert!(test_deck
+            .0
+            .ends_with(&[Card::new(Rank::King, Suit::Spades)]));
         assert_eq!(test_deck.0.len(), 52);
     }
-
 
     #[test]
     fn test_eq() {
@@ -157,7 +159,6 @@ mod test {
 
         assert_eq!(test_deck, other_test_deck);
     }
-
 
     #[test]
     fn test_shuffle() {
@@ -172,7 +173,6 @@ mod test {
 
         assert_eq!(test_deck == other_test_deck, false);
     }
-
 
     #[test]
     fn test_deal() {

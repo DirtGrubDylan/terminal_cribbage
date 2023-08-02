@@ -10,7 +10,6 @@ use cards::card::Card;
 #[derive(Debug, PartialEq)]
 pub struct Hand(pub Vec<Card>);
 
-
 impl Hand {
     /// Constructs a new `Hand`.
     ///
@@ -30,7 +29,6 @@ impl Hand {
 
         Hand(card_vector)
     }
-
 
     /// Adds a [`Card`] to `Hand`.
     ///
@@ -70,7 +68,6 @@ impl Hand {
         self.0.sort();
     }
 
-
     /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
     ///
     /// [`Card`]: struct.Card.html
@@ -100,7 +97,6 @@ impl Hand {
     }
 }
 
-
 impl fmt::Display for Hand {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         for card in self.0.iter() {
@@ -110,7 +106,6 @@ impl fmt::Display for Hand {
         write!(formatter, "")
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -125,7 +120,6 @@ mod test {
         assert_eq!(test_hand, Hand::new());
     }
 
-
     #[test]
     fn test_add_card() {
         let mut hand = Hand::new();
@@ -139,16 +133,19 @@ mod test {
         hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
 
         assert_eq!(hand.0.len(), 7);
-        assert_eq!(hand.0,
-                   vec![Card::new(Rank::Ace, Suit::Clubs),
-                        Card::new(Rank::Two, Suit::Hearts),
-                        Card::new(Rank::Two, Suit::Spades),
-                        Card::new(Rank::Three, Suit::Hearts),
-                        Card::new(Rank::Four, Suit::Spades),
-                        Card::new(Rank::Ten, Suit::Clubs),
-                        Card::new(Rank::Queen, Suit::Diamonds)]);
+        assert_eq!(
+            hand.0,
+            vec![
+                Card::new(Rank::Ace, Suit::Clubs),
+                Card::new(Rank::Two, Suit::Hearts),
+                Card::new(Rank::Two, Suit::Spades),
+                Card::new(Rank::Three, Suit::Hearts),
+                Card::new(Rank::Four, Suit::Spades),
+                Card::new(Rank::Ten, Suit::Clubs),
+                Card::new(Rank::Queen, Suit::Diamonds)
+            ]
+        );
     }
-
 
     #[test]
     fn test_discard() {

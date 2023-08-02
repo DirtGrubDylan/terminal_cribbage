@@ -18,7 +18,6 @@ pub enum Rank {
     King,
 }
 
-
 /// `Suit` is a type the represents the suit of a playing card.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Suit {
@@ -27,7 +26,6 @@ pub enum Suit {
     Diamonds,
     Spades,
 }
-
 
 /// `Card` is a struct that holds the [`Rank`] and [`Suit`] type of a playing card.
 ///
@@ -55,6 +53,42 @@ impl Card {
         Card {
             rank: rank,
             suit: suit,
+        }
+    }
+
+    /// Gets the score of a `Card`.
+    ///
+    /// All scores match the rank, where the [`Rank::Jack`], [`Rank::Queen`], and [`Rank::King`] 
+    /// cards are all worth 10 and the [`Rank::Ace`] is worth 1.
+    ///
+    /// # Exampless
+    ///    
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    ///
+    /// let playing_card_1 = Card::new(Rank::Ace, Suit::Spades);
+    /// let playing_card_2 = Card::new(Rank::Queen, Suit::Hearts);
+    ///
+    /// assert_eq!(playing_card_1.score(), 1);
+    /// assert_eq!(playing_card_2.score(), 10);
+    /// ```
+    /// [`Rank`]: enum.Rank.html
+    /// [`Suit`]: enum.Suit.html
+    pub fn score(&self) -> u32 {
+        match self.rank {
+            Rank::Ace => 1,
+            Rank::Two => 2,
+            Rank::Three => 3,
+            Rank::Four => 4,
+            Rank::Five => 5,
+            Rank::Six => 6,
+            Rank::Seven => 7,
+            Rank::Eight => 8,
+            Rank::Nine => 9,
+            Rank::Ten => 10,
+            Rank::Jack => 10,
+            Rank::Queen => 10,
+            Rank::King => 10,
         }
     }
 }
@@ -88,7 +122,6 @@ impl fmt::Display for Card {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -99,5 +132,14 @@ mod test {
 
         assert_eq!(test_card.rank, Rank::Ace);
         assert_eq!(test_card.suit, Suit::Clubs);
+    }
+
+    #[test]
+    fn test_score() {
+        let playing_card_1 = Card::new(Rank::Ace, Suit::Spades);
+        let playing_card_2 = Card::new(Rank::Queen, Suit::Hearts);
+        
+        assert_eq!(playing_card_1.score(), 1);
+        assert_eq!(playing_card_2.score(), 10);
     }
 }

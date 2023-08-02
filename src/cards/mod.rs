@@ -117,9 +117,9 @@
 //! [`Rank`]: enum.Rank.html
 //! [`Suit`]: enum.Suit.html
 
+pub use self::card::{Card, Rank, Suit};
 pub use self::deck::Deck;
 pub use self::hand::Hand;
-pub use self::card::{Card, Rank, Suit};
 
 mod card;
 mod deck;

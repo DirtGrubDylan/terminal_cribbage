@@ -1,6 +1,6 @@
 //! # Terminal Cribbage
 //!
-//! Termial Cribbage is a simple Cribbage game that can be played on the terminal of any platform 
+//! Termial Cribbage is a simple Cribbage game that can be played on the terminal of any platform
 //! (e.g. Windows Command Line, Unix Terminal, etc...). For those new to the game, [here are the
 //! rules].
 //!
