@@ -1,6 +1,6 @@
 use std::fmt;
 
-use rand::{self, Rng};
+use rand::seq::SliceRandom;
 
 use cards::{Card, Rank, Suit};
 
@@ -78,7 +78,7 @@ impl Deck {
     pub fn shuffle(&mut self) {
         let mut rng = rand::thread_rng();
 
-        rng.shuffle(&mut self.0);
+        self.0.shuffle(&mut rng);
     }
 
 
