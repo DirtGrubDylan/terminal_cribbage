@@ -1,5 +1,5 @@
 [package]
-name = "Terminal Cribbage"
+name = "terminal_cribbage"
 version = "0.0.1"
 authors = ["Dylan Hicks <dman1366@gmail.com>"]
 
