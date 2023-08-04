@@ -34,11 +34,22 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Install Formatter
-        run: rustup component add rustfmt
-
       - name: Run Formatter
-        run: cargo fmt
+        run: cargo fmt --all
+
+  clippy_check:
+
+    name: Clippy
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features
+
 
 
 
