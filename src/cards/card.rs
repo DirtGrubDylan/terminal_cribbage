@@ -49,16 +49,14 @@ impl Card {
     ///
     /// println!("Played card: {}", playing_card);
     /// ```
+    #[must_use]
     pub fn new(rank: Rank, suit: Suit) -> Card {
-        Card {
-            rank: rank,
-            suit: suit,
-        }
+        Card { rank, suit }
     }
 
     /// Gets the score of a `Card`.
     ///
-    /// All scores match the rank, where the [`Rank::Jack`], [`Rank::Queen`], and [`Rank::King`] 
+    /// All scores match the rank, where the [`Rank::Jack`], [`Rank::Queen`], and [`Rank::King`]
     /// cards are all worth 10 and the [`Rank::Ace`] is worth 1.
     ///
     /// # Exampless
@@ -74,6 +72,7 @@ impl Card {
     /// ```
     /// [`Rank`]: enum.Rank.html
     /// [`Suit`]: enum.Suit.html
+    #[must_use]
     pub fn score(&self) -> u32 {
         match self.rank {
             Rank::Ace => 1,
@@ -85,10 +84,7 @@ impl Card {
             Rank::Seven => 7,
             Rank::Eight => 8,
             Rank::Nine => 9,
-            Rank::Ten => 10,
-            Rank::Jack => 10,
-            Rank::Queen => 10,
-            Rank::King => 10,
+            Rank::Ten | Rank::Jack | Rank::Queen | Rank::King => 10,
         }
     }
 }
@@ -118,7 +114,7 @@ impl fmt::Display for Card {
             Suit::Spades => '\u{2660}',
         };
 
-        write!(formatter, "[{}{}]", rank_str, suit_char)
+        write!(formatter, "[{rank_str}{suit_char}]")
     }
 }
 
@@ -138,7 +134,7 @@ mod test {
     fn test_score() {
         let playing_card_1 = Card::new(Rank::Ace, Suit::Spades);
         let playing_card_2 = Card::new(Rank::Queen, Suit::Hearts);
-        
+
         assert_eq!(playing_card_1.score(), 1);
         assert_eq!(playing_card_2.score(), 10);
     }

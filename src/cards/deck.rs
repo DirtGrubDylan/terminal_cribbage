@@ -32,6 +32,7 @@ impl Deck {
     ///
     /// println!("Unshuffled deck of cards: {}", deck);
     /// ```
+    #[must_use]
     pub fn new() -> Deck {
         let mut cards: Vec<Card> = Vec::with_capacity(52);
         let ranks: Vec<Rank> = vec![
@@ -51,8 +52,8 @@ impl Deck {
         ];
         let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
-        for suit in suits.into_iter() {
-            for &rank in ranks.iter() {
+        for suit in suits {
+            for &rank in &ranks {
                 cards.push(Card::new(rank, suit));
             }
         }
@@ -101,10 +102,16 @@ impl Deck {
     }
 }
 
+impl Default for Deck {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        for card in self.0.iter() {
-            write!(formatter, "\n{}", card)?;
+        for card in &self.0 {
+            write!(formatter, "\n{card}")?;
         }
 
         write!(formatter, "")
@@ -137,8 +144,8 @@ mod test {
         ];
         let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
 
-        for suit in suits.into_iter() {
-            for &rank in ranks.iter() {
+        for suit in suits {
+            for &rank in &ranks {
                 assert!(test_deck.0.contains(&Card::new(rank, suit)));
             }
         }
@@ -167,11 +174,11 @@ mod test {
 
         test_deck.shuffle();
 
-        assert_eq!(test_deck == other_test_deck, false);
+        assert_ne!(test_deck, other_test_deck);
 
         other_test_deck.shuffle();
 
-        assert_eq!(test_deck == other_test_deck, false);
+        assert_ne!(test_deck, other_test_deck);
     }
 
     #[test]

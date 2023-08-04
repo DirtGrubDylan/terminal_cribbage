@@ -24,6 +24,7 @@ impl Hand {
     ///
     /// assert!(hand.0.is_empty());
     /// ```
+    #[must_use]
     pub fn new() -> Hand {
         let card_vector: Vec<Card> = Vec::new();
 
@@ -70,10 +71,13 @@ impl Hand {
 
     /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
     ///
-    /// [`Card`]: struct.Card.html
+    /// # Errors
+    ///
+    /// Will return `Err` if the index is out of bounds or the `Hand` has no cards.
     ///
     /// # Examples
     ///
+    /// [`Card`]: struct.Card.html
     /// ```
     /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
     ///
@@ -87,7 +91,7 @@ impl Hand {
     /// let mut card = hand.discard(2);
     ///
     /// assert_eq!(card, Ok(Card::new(Rank::Three, Suit::Hearts)));
-    // / ```
+    /// ```
     pub fn discard(&mut self, index_of_card: usize) -> Result<Card, String> {
         if index_of_card >= self.0.len() {
             return Err("Out of Bounds!".to_string());
@@ -97,10 +101,16 @@ impl Hand {
     }
 }
 
+impl Default for Hand {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Hand {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        for card in self.0.iter() {
-            write!(formatter, "\n{}", card)?;
+        for card in &self.0 {
+            write!(formatter, "\n{card}")?;
         }
 
         write!(formatter, "")
