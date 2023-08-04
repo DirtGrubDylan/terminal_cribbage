@@ -10,6 +10,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "terminal_cribbage"
 path = "src/main.rs"
+doc = false
 
 [dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }

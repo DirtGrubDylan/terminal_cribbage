@@ -7,6 +7,8 @@
 //! As of right now, Terminal Cribbage can only be played with two players of three differnt
 //! variations: One Human vs. One Human, One Human vs. One AI, or One AI vs. One AI.
 //!
+//! [GitHub Repository]
+//!
 //! ## Known Issues/Future Work
 //!
 //! * The AI is not robust and merely choose random cards to discard. This will eventually be
@@ -17,6 +19,7 @@
 //! merely as an excercise for myself, and maybe it would be best to use an external crate.
 //!
 //! [here are the rules]: https://en.wikipedia.org/wiki/Rules_of_cribbage
+//! [GitHub Repository]: https://github.com/DirtGrubDylan/terminal_cribbage
 
 extern crate rand;
 

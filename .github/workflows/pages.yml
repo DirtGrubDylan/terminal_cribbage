@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
-          command: doc
+          command: doc --no-deps
 
       - name: index.html redirect
         uses: "DamianReeves/write-file-action@master"
