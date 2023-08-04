@@ -38,9 +38,6 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-
       - name: Generate Docs
         run: cargo doc --no-deps
 
@@ -51,6 +48,9 @@ jobs:
           write-mode: overwrite
           contents: |
             <meta http-equiv="Refresh" content="0; url='libterminal_cribbage/index.html'" />
+
+      - name: Change ./target/doc/.lock file permission from 0600 (rw-------) to 0644 (rw-r--r--)
+        run: chmod 0644 ./target/doc/.lock
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
