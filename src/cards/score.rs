@@ -11,6 +11,8 @@
 ///
 /// Just going to sum all the combinations.
 ///
+/// https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=b768f384631c90f3cdbaad7446123d9c
+///
 /// let v: Vec<Temp> = vec![Temp::new(1), Temp::new(2), Temp::new(3), Temp::new(4), Temp::new(5)];
 ///
 /// println!("{:?}\n", v);
