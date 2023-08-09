@@ -6,7 +6,7 @@
 //! ## Card, Rank, and Suit
 //!
 //! With all card games, using the standard playing cards, each [`Card`] references a [`Rank`] and a
-//! [`Suit`]. `libterminal_cribbage::cards` provides the struct [`Card`], and two enums, [`Rank`]
+//! [`Suit`]. This module provides the struct [`Card`], and two enums, [`Rank`]
 //! and [`Suit`], in order to ease the use of organization and comparrisons.
 //!
 //! For example, in Cribbage, when scoring, each [`Card`] must be evaluated based on it's [`Rank`]
