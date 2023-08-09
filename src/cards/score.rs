@@ -1,72 +1,42 @@
+//! This is just a table of all scores based on a [`Hand`] and "starter" [`Card`].
+//!
+//! We can ignore single cards except if jack in [`Hand`] is same suit as "starter" [`Card`].
+//!
+//! There are a total of 31 [`Card`] combinations:
+//!   * Combinations of 1 [`Card`] = 5
+//!   * Combinations of 2 [`Card`]s = 10
+//!   * Combinations of 3 [`Card`]s = 10
+//!   * Combinations of 4 [`Card`]s = 5
+//!   * Combinations of 5 [`Card`]s = 1
+//!
+//! Keep in mind for play (not hand/crib):
+//!   * All points from above except flushes and nobs count during playing
+//!   * Runs can last as long as possible in play - 1pt per card in run
+//!       * Runs can go backwards or forwards and are not necessarily sequential
+//!       * 5 -> 4 -> 7 -> 6 is a four card run
+//!       * A -> 5 -> 3 -> 4 -> 6 -> 2 is a six card run
+//!       * 3-5 card runs are worth 3-5pts respectively
+//!           * player 1 does a 3 card run and gets 3 points
+//!           * player 2 does a 4 card run and gets 4 points
+//!           * player 1 does a 5 card run and gets 5 points
+//!       * 6+ runs are just worth a point per play
+//!           * player 2 does a 6 card run and gets 1 points
+//!           * player 1 does a 7 card run and gets 1 points
+//!   * Pairs are counted as:
+//!       * player 1 does a pair and gets 2 points
+//!       * player 2 does a three-of-a-kind and gets 6 points
+//!       * player 1 does a four-of-a-kind and gets 12 points
+//!   * 15s are only counted based on the previous card
+//!   * 31 (play stack total is 31) - 2pts
+//!   * Go (played last card) - 1pt
+//!   * His Heels (jack is starter and player is dealer) - 2pts
+//!
+//! [`Card`]: struct.Card.html
+//! [`Hand`]: struct.Hand.html
 use itertools::Itertools;
 use std::iter;
 
 use cards::{Card, Hand, Rank, Suit};
-
-/// This is just a table of all scores based on a [`Hand`] and "starter" [`Card`].
-///
-/// We can ignore single cards except if jack in [`Hand`] is same suit as "starter" [`Card`].
-///
-/// There are a total of 31 [`Card`] combinations:
-///   * Combinations of 1 [`Card`] = 5
-///   * Combinations of 2 [`Card`]s = 10
-///   * Combinations of 3 [`Card`]s = 10
-///   * Combinations of 4 [`Card`]s = 5
-///   * Combinations of 5 [`Card`]s = 1
-///
-/// Just going to sum all the combinations.
-///
-/// https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=b768f384631c90f3cdbaad7446123d9c
-///
-/// let v: Vec<Temp> = vec![Temp::new(1), Temp::new(2), Temp::new(3), Temp::new(4), Temp::new(5)];
-///
-/// println!("{:?}\n", v);
-///
-/// let it: Vec<(Vec<Temp>, u32)> = (1..=5)
-///     .flat_map(|i| v.iter().copied().combinations(i))
-///     .map(|vec| (vec.clone(), vec.iter().fold(0, |acc, temp| acc + temp.score())))
-///     .collect();
-///
-/// for (tv, tt) in it {
-///     println!("{:?} -> {}", tv, tt);
-/// }
-///
-/// [`Card`]: struct.Card.html
-/// [`Hand`]: struct.Hand.html
-///
-/// Check for:
-///   * 15s (combinations and sum scores) - 2pts each
-///   * Four of a kind (combinations, just counting distinct pairs) - 12 pts
-///   * Three of a kinds (combinations, just counting distinct pairs) - 6 pts
-///   * Pair (combinations) - 2pts each (three of a kind is 3 distinct pairs, four is 6 pairs)
-///   * 5 card run - 5pts
-///   * 4 card run - 4pts
-///   * 3 card run - 3pts (one point for every card in order past 2 cards)
-///   * 5 card flush (hand + starter) - 5pts
-///   * 4 card flush (hand, but not crib) - 4pts (if starter is same suit, +1 additional)
-///   * Nobs (if jack in hand/crib matches starter suit) - 1pt
-///
-/// Keep in mind for play (not hand/crib):
-///   * All points from above except flushes and nobs count during playing
-///   * Runs can last as long as possible in play - 1pt per card in run
-///       * Runs can go backwards or forwards and are not necessarily sequential
-///       * 5 -> 4 -> 7 -> 6 is a four card run
-///       * A -> 5 -> 3 -> 4 -> 6 -> 2 is a six card run
-///       * 3-5 card runs are worth 3-5pts respectively
-///           * player 1 does a 3 card run and gets 3 points
-///           * player 2 does a 4 card run and gets 4 points
-///           * player 1 does a 5 card run and gets 5 points
-///       * 6+ runs are just worth a point per play
-///           * player 2 does a 6 card run and gets 1 points
-///           * player 1 does a 7 card run and gets 1 points
-///   * Pairs are counted as:
-///       * player 1 does a pair and gets 2 points
-///       * player 2 does a three-of-a-kind and gets 6 points
-///       * player 1 does a four-of-a-kind and gets 12 points
-///   * 15s are only counted based on the previous card
-///   * 31 (play stack total is 31) - 2pts
-///   * Go (played last card) - 1pt
-///   * His Heels (jack is starter and player is dealer) - 2pts
 
 /// Returns a positive score if combinations of [`Cards`] scores in [`Hand`] total to 15.
 ///
@@ -98,8 +68,18 @@ use cards::{Card, Hand, Rank, Suit};
 ///
 /// assert_eq!(score, 16);
 /// ```
-pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
-    unimplemented!()
+pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
+    let score_per_fifteen = 2;
+
+    let hand_starter_iter = hand.as_vec().iter().chain(iter::once(starter));
+
+    let number_of_fifteen_sums = (1..=5)
+        .flat_map(|combination_value| hand_starter_iter.clone().combinations(combination_value))
+        .map(|combination| combination.iter().fold(0, |acc, card| acc + card.score()))
+        .filter(|score_sum| *score_sum == 15)
+        .count();
+
+    score_per_fifteen * (number_of_fifteen_sums as u32)
 }
 
 /// Returns a positive score if the [`Cards`] in [`Hand`] with the starter match [`Rank`].
@@ -136,14 +116,6 @@ pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
 /// assert_eq!(score_2, 8);
 /// ```
 pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
-    // let it: Vec<(Vec<Temp>, u32)> = (1..=5)
-    //     .flat_map(|i| v.iter().copied().combinations(i))
-    //     .map(|vec| (vec.clone(), vec.iter().fold(0, |acc, temp| acc + temp.score())))
-    //     .collect();
-    //
-    // for (tv, tt) in it {
-    //     println!("{:?} -> {}", tv, tt);
-    // }
     let score_per_pair = 2;
 
     let number_of_matching_pairs = hand
