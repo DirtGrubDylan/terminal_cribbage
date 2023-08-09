@@ -120,7 +120,9 @@
 pub use self::card::{Card, Rank, Suit};
 pub use self::deck::Deck;
 pub use self::hand::Hand;
+pub use self::score::*;
 
 mod card;
 mod deck;
 mod hand;
+mod score;

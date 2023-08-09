@@ -31,7 +31,7 @@ pub enum Suit {
 ///
 /// [`Rank`]: enum.Rank.html
 /// [`Suit`]: enum.Suit.html
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Card {
     pub rank: Rank,
     pub suit: Suit,

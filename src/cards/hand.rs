@@ -99,6 +99,66 @@ impl Hand {
 
         Ok(self.0.remove(index_of_card))
     }
+
+    /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// [`Card`]: struct.Card.html
+    /// ```
+    /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
+    ///
+    /// let card1 = Card::new(Rank::Ace, Suit::Clubs);
+    /// let card2 = Card::new(Rank::Ace, Suit::Diamonds);
+    ///
+    /// let mut hand = Hand::new();
+    ///
+    /// hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
+    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+    /// hand.add_card(Card::new(Rank::Two, Suit::Spades));
+    ///
+    /// let discard1 = hand.discard_matching(&card1);
+    /// let discard2 = hand.discard_matching(&card2);
+    ///
+    /// assert_eq!(discard1, Some(card1));
+    /// assert_eq!(discard2, None);
+    /// ```
+    pub fn discard_matching(&mut self, matching_card: &Card) -> Option<Card> {
+        self.0
+            .iter()
+            .position(|card| card == matching_card)
+            .map(|index| self.0.remove(index))
+    }
+
+    /// Returns a borrowed `Vec<[`Card`]>` as a representation of the `Hand`.
+    ///
+    /// # Examples
+    ///
+    /// [`Card`]: struct.Card.html
+    /// ```
+    /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
+    ///
+    /// let expected = vec![
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Three, Suit::Hearts),
+    ///     Card::new(Rank::Four, Suit::Spades)];
+    ///
+    /// let mut hand = Hand::new();
+    ///
+    /// hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
+    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+    /// hand.add_card(Card::new(Rank::Two, Suit::Spades));
+    ///
+    /// let hand_as_vec = hand.as_vec();
+    ///
+    /// assert_eq!(hand_as_vec, &expected);
+    /// ```
+    pub fn as_vec(&self) -> &Vec<Card> {
+        &self.0
+    }
 }
 
 impl Default for Hand {
@@ -114,6 +174,38 @@ impl fmt::Display for Hand {
         }
 
         write!(formatter, "")
+    }
+}
+
+/// Converts a `Vec<[Card]>` to a `Hand`.
+///    
+/// # Examples
+///
+/// [Card]: struct.Card.html
+/// ```
+/// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
+///
+/// let cards = vec![
+///     Card::new(Rank::Ace, Suit::Clubs),
+///     Card::new(Rank::Two, Suit::Spades),
+///     Card::new(Rank::Three, Suit::Hearts),
+///     Card::new(Rank::Four, Suit::Spades)];
+///
+/// let hand = Hand::from(cards.clone());
+///
+/// let hand_as_vec = hand.as_vec();
+///
+/// assert_eq!(hand_as_vec, &cards);
+/// ```
+impl From<Vec<Card>> for Hand {
+    fn from(cards: Vec<Card>) -> Self {
+        let mut hand = Hand::new();
+
+        for card in cards {
+            hand.add_card(card);
+        }
+
+        hand
     }
 }
 
@@ -179,5 +271,61 @@ mod test {
         card = hand.discard(0);
 
         assert!(card.is_err());
+    }
+
+    #[test]
+    fn test_as_vec() {
+        let expected = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Spades),
+            Card::new(Rank::Three, Suit::Hearts),
+            Card::new(Rank::Four, Suit::Spades),
+        ];
+
+        let mut hand = Hand::new();
+
+        hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
+        hand.add_card(Card::new(Rank::Four, Suit::Spades));
+        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Two, Suit::Spades));
+
+        let hand_as_vec = hand.as_vec();
+
+        assert_eq!(hand_as_vec, &expected);
+    }
+
+    #[test]
+    fn discard_matching() {
+        let card1 = Card::new(Rank::Ace, Suit::Clubs);
+        let card2 = Card::new(Rank::Ace, Suit::Diamonds);
+
+        let mut hand = Hand::new();
+
+        hand.add_card(card1.clone());
+        hand.add_card(Card::new(Rank::Four, Suit::Spades));
+        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Two, Suit::Spades));
+
+        let discard1 = hand.discard_matching(&card1);
+        let discard2 = hand.discard_matching(&card2);
+
+        assert_eq!(discard1, Some(card1));
+        assert_eq!(discard2, None);
+    }
+
+    #[test]
+    fn from_vec() {
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Spades),
+            Card::new(Rank::Three, Suit::Hearts),
+            Card::new(Rank::Four, Suit::Spades),
+        ];
+
+        let hand = Hand::from(cards.clone());
+
+        let hand_as_vec = hand.as_vec();
+
+        assert_eq!(hand_as_vec, &cards);
     }
 }
