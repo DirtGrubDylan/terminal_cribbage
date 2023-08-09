@@ -145,7 +145,8 @@ impl Hand {
     ///     Card::new(Rank::Ace, Suit::Clubs),
     ///     Card::new(Rank::Two, Suit::Spades),
     ///     Card::new(Rank::Three, Suit::Hearts),
-    ///     Card::new(Rank::Four, Suit::Spades)];
+    ///     Card::new(Rank::Four, Suit::Spades),
+    /// ];
     ///
     /// let mut hand = Hand::new();
     ///
@@ -192,7 +193,8 @@ impl fmt::Display for Hand {
 ///     Card::new(Rank::Ace, Suit::Clubs),
 ///     Card::new(Rank::Two, Suit::Spades),
 ///     Card::new(Rank::Three, Suit::Hearts),
-///     Card::new(Rank::Four, Suit::Spades)];
+///     Card::new(Rank::Four, Suit::Spades),
+/// ];
 ///
 /// let hand = Hand::from(cards.clone());
 ///

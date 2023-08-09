@@ -70,18 +70,157 @@ use cards::{Card, Hand, Rank, Suit};
 ///   * 31 (play stack total is 31) - 2pts
 ///   * Go (played last card) - 1pt
 ///   * His Heels (jack is starter and player is dealer) - 2pts
+
+/// Returns a positive score if combinations of [`Cards`] scores in [`Hand`] total to 15.
+///
+/// This counts all combinations of 2, 3, 4, and 5 cards.
+///
+/// A [`Card`] score is based on [`Card::score`].
+///
+/// [`Hand`]: struct.Hand.html
+/// [`Card`]: struct.Card.html
+/// 
+/// # Examples
+///
+/// ```
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+/// use libterminal_cribbage::cards::score;
+///
+/// let cards = vec![
+///     Card::new(Rank::Jack, Suit::Clubs),
+///     Card::new(Rank::Five, Suit::Diamonds),
+///     Card::new(Rank::Five, Suit::Hearts),
+///     Card::new(Rank::Five, Suit::Spades),
+/// ];
+///
+/// let starter = Card::new(Rank::Five, Suit::Clubs);
+///
+/// let hand = Hand::from(cards);
+///
+/// let score = score::score_fifteens(&hand, &starter);
+///
+/// assert_eq!(score, 16);
+/// ```
 pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
     unimplemented!()
 }
 
+/// Returns a positive score if the [`Cards`] in [`Hand`] with the starter match [`Rank`].
+///
+/// This counts all pairs matching [`Rank`]s in the [`Card`]s. A three-of-a-kind is 3 pairs.
+/// While a four-of-a-kind is 6 pairs.
+///
+/// [`Hand`]: struct.Hand.html
+/// [`Card`]: struct.Card.html
+/// [`Rank`]: enum.Rank.html
+/// 
+/// # Examples
+///
+/// ```
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+/// use libterminal_cribbage::cards::score;
+///
+/// let cards = vec![
+///     Card::new(Rank::Six, Suit::Clubs),
+///     Card::new(Rank::Four, Suit::Clubs),
+///     Card::new(Rank::Four, Suit::Hearts),
+///     Card::new(Rank::Four, Suit::Spades),
+/// ];
+///
+/// let starter_1 = Card::new(Rank::Four, Suit::Diamonds);
+/// let starter_2 = Card::new(Rank::Six, Suit::Diamonds);
+///
+/// let hand = Hand::from(cards);
+///
+/// let score_1 = score::score_pairs(&hand, &starter_1);
+/// let score_2 = score::score_pairs(&hand, &starter_2);
+///
+/// assert_eq!(score_1, 12);
+/// assert_eq!(score_2, 8);
+/// ```
 pub fn score_pairs(_hand: &Hand, _starter: &Card) -> u32 {
     unimplemented!()
 }
 
+/// Returns a positive score if the [`Cards`] in [`Hand`] with the starter is sequential.
+///
+/// This can be mutiplicative if there are matching [`Rank`]s in the [`Card`]s.
+///
+/// [`Hand`]: struct.Hand.html
+/// [`Card`]: struct.Card.html
+/// [`Rank`]: enum.Rank.html
+/// 
+/// # Examples
+///
+/// ```
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+/// use libterminal_cribbage::cards::score;
+///
+/// let cards = vec![
+///     Card::new(Rank::Six, Suit::Clubs),
+///     Card::new(Rank::Four, Suit::Clubs),
+///     Card::new(Rank::Four, Suit::Hearts),
+///     Card::new(Rank::Three, Suit::Clubs),
+/// ];
+///
+/// let starter_1 = Card::new(Rank::Two, Suit::Clubs);
+/// let starter_2 = Card::new(Rank::Three, Suit::Clubs);
+///
+/// let hand = Hand::from(cards);
+///
+/// let score_1 = score::score_runs(&hand, &starter_1);
+/// let score_2 = score::score_runs(&hand, &starter_2);
+///
+/// assert_eq!(score_1, 6);
+/// assert_eq!(score_2, 0);
+/// ```
 pub fn score_runs(_hand: &Hand, _starter: &Card) -> u32 {
+    let mut multiplier = 1;
+    let mut score = 0;
+
+    // let mut 
+    //
+    // for card in hand.as_vec().iter().chain(iter::once(starter))
+    //   if 
+
     unimplemented!()
 }
 
+/// Returns `0`, `4`, or `5` based on the [`Suit`]s of the [`Hand`] and starter [`Card`].
+///
+/// This is called a flush. If all the [`Card`]s in the [`Hand`] have the same [`Suit`], 
+/// then the score is `4`. If the starter [`Card`] also matches that [`Suit`], then the 
+/// score is `5`. However, if this is for a "crib" [`Hand`], then all [`Card`]s must match,
+/// including the starter; otherwise, the score is `0`, even if all [`Card`]s in the 
+/// [`Hand`] match.
+///
+/// [`Hand`]: struct.Hand.html
+/// [`Card`]: struct.Card.html
+/// [`Suit`]: enum.Suit.html
+///
+/// # Examples
+///
+/// ```
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+/// use libterminal_cribbage::cards::score;
+///
+/// let cards = vec![
+///     Card::new(Rank::Ace, Suit::Clubs),
+///     Card::new(Rank::Two, Suit::Clubs),
+///     Card::new(Rank::Three, Suit::Clubs),
+///     Card::new(Rank::Four, Suit::Clubs),
+/// ];
+///
+/// let starter = Card::new(Rank::Five, Suit::Spades);
+///
+/// let hand = Hand::from(cards);
+///
+/// let crib_score = score::score_flushes(&hand, &starter, /*is_crib=*/ true);
+/// let hand_score = score::score_flushes(&hand, &starter, /*is_crib=*/ false);
+///
+/// assert_eq!(crib_score, 0);
+/// assert_eq!(hand_score, 4);
+/// ```
 pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
     let hand_vec = hand.as_vec();
 
@@ -100,7 +239,7 @@ pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
     }
 }
 
-/// Returns `1` if a [`Rank::Jack`] in the [`Hand`] matches the starter [`Suit`]. Otherwise, returns `0`.
+/// Returns `0` or `1` depending on a [`Rank::Jack`] in the [`Hand`] matching the starter [`Suit`].
 ///
 /// This is called "Nobs".
 ///
@@ -125,7 +264,7 @@ pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let score = score_nobs(&hand, &starter);
+/// let score = score::score_nobs(&hand, &starter);
 ///
 /// assert_eq!(score, 1);
 /// ```
