@@ -1,4 +1,4 @@
-use cards::{Card, Hand};
+use cards::{Card, Hand, Rank, Suit};
 
 /// This is just a table of all scores based on a [`Hand`] and "starter" [`Card`].
 ///
@@ -83,11 +83,27 @@ pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
 }
 
 pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
-    unimplemented!()
+    let hand_vec = hand.as_vec();
+
+    let target_suit = hand_vec.get(0).map_or(Suit::Clubs, |card| card.suit);
+
+    let all_suits_match = hand_vec.iter().all(|card| card.suit == target_suit);
+
+    let starter_suit_matches = starter.suit == target_suit;
+
+    if all_suits_match && starter_suit_matches {
+        5
+    } else if all_suits_match && !is_crib {
+        4
+    } else {
+        0
+    }
 }
 
 pub fn score_nobs(hand: &Hand, starter: &Card) -> u32 {
-    unimplemented!()
+    let target_jack = Card::new(Rank::Jack, starter.suit);
+
+    hand.as_vec().iter().any(|card| *card == target_jack) as u32
 }
 
 #[cfg(test)]
