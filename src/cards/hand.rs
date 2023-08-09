@@ -150,6 +150,7 @@ impl Hand {
     ///
     /// assert_eq!(hand_as_vec, &expected);
     /// ```
+    #[must_use]
     pub fn as_vec(&self) -> &Vec<Card> {
         &self.0
     }

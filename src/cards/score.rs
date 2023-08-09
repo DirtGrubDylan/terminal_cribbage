@@ -31,11 +31,16 @@
 //!   * Go (played last card) - 1pt
 //!   * His Heels (jack is starter and player is dealer) - 2pts
 use itertools::Itertools;
+use std::convert::TryFrom;
 use std::iter;
 
 use cards::{Card, Hand, Rank, Suit};
 
-/// Returns a positive score if combinations of [`Card`] scores in [`Hand`] total to 15.
+/// Returns a positive score if combinations of [`Card`] scores in [`Hand`] total to `15`.
+///
+/// # Panics
+///
+/// Panics if this method finds more combinations adding to `15` then can fit into a [`u32`].
 ///
 /// This counts all combinations of 2, 3, 4, and 5 cards.
 ///
@@ -58,11 +63,12 @@ use cards::{Card, Hand, Rank, Suit};
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let score = score::score_fifteens(&hand, &starter);
+/// let score = score::fifteens(&hand, &starter);
 ///
 /// assert_eq!(score, 16);
 /// ```
-pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
+#[must_use]
+pub fn fifteens(hand: &Hand, starter: &Card) -> u32 {
     let score_per_fifteen = 2;
 
     let hand_starter_iter = hand.as_vec().iter().chain(iter::once(starter));
@@ -73,10 +79,14 @@ pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
         .filter(|score_sum| *score_sum == 15)
         .count();
 
-    score_per_fifteen * (number_of_fifteen_sums as u32)
+    score_per_fifteen * u32::try_from(number_of_fifteen_sums).unwrap()
 }
 
 /// Returns a positive score if the [`Card`] in [`Hand`] with the starter match [`Rank`].
+///
+/// # Panics
+///
+/// Panics if this method finds more matching pairs then can fit into a [`u32`].
 ///
 /// This counts all pairs matching [`Rank`]s in the [`Card`]s. A three-of-a-kind is 3 pairs.
 /// While a four-of-a-kind is 6 pairs.
@@ -99,13 +109,14 @@ pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let score_1 = score::score_pairs(&hand, &starter_1);
-/// let score_2 = score::score_pairs(&hand, &starter_2);
+/// let score_1 = score::pairs(&hand, &starter_1);
+/// let score_2 = score::pairs(&hand, &starter_2);
 ///
 /// assert_eq!(score_1, 12);
 /// assert_eq!(score_2, 8);
 /// ```
-pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
+#[must_use]
+pub fn pairs(hand: &Hand, starter: &Card) -> u32 {
     let score_per_pair = 2;
 
     let number_of_matching_pairs = hand
@@ -116,12 +127,16 @@ pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
         .filter(|(card_1, card_2)| card_1.rank == card_2.rank)
         .count();
 
-    score_per_pair * (number_of_matching_pairs as u32)
+    score_per_pair * u32::try_from(number_of_matching_pairs).unwrap()
 }
 
 /// Returns a positive score if the [`Card`] in [`Hand`] with the starter is sequential.
 ///
 /// This can be mutiplicative if there are matching [`Rank`]s in the [`Card`]s.
+///
+/// # Panics
+///
+/// Panics if there is a [`Rank`] variant who's enum value is greater than `12`.
 ///
 /// # Examples
 ///
@@ -141,13 +156,14 @@ pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let score_1 = score::score_runs(&hand, &starter_1);
-/// let score_2 = score::score_runs(&hand, &starter_2);
+/// let score_1 = score::runs(&hand, &starter_1);
+/// let score_2 = score::runs(&hand, &starter_2);
 ///
 /// assert_eq!(score_1, 6);
 /// assert_eq!(score_2, 0);
 /// ```
-pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
+#[must_use]
+pub fn runs(hand: &Hand, starter: &Card) -> u32 {
     let mut score = 0;
     let mut max_multiplier = 1;
     let mut max_run = 0;
@@ -216,13 +232,14 @@ pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let crib_score = score::score_flushes(&hand, &starter, /*is_crib=*/ true);
-/// let hand_score = score::score_flushes(&hand, &starter, /*is_crib=*/ false);
+/// let crib_score = score::flushes(&hand, &starter, /*is_crib=*/ true);
+/// let hand_score = score::flushes(&hand, &starter, /*is_crib=*/ false);
 ///
 /// assert_eq!(crib_score, 0);
 /// assert_eq!(hand_score, 4);
 /// ```
-pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
+#[must_use]
+pub fn flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
     let hand_vec = hand.as_vec();
 
     let target_suit = hand_vec.get(0).map_or(Suit::Clubs, |card| card.suit);
@@ -261,14 +278,15 @@ pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
 ///
 /// let hand = Hand::from(cards);
 ///
-/// let score = score::score_nobs(&hand, &starter);
+/// let score = score::nobs(&hand, &starter);
 ///
 /// assert_eq!(score, 1);
 /// ```
-pub fn score_nobs(hand: &Hand, starter: &Card) -> u32 {
+#[must_use]
+pub fn nobs(hand: &Hand, starter: &Card) -> u32 {
     let target_jack = Card::new(Rank::Jack, starter.suit);
 
-    hand.as_vec().iter().any(|card| *card == target_jack) as u32
+    u32::from(hand.as_vec().iter().any(|card| *card == target_jack))
 }
 
 #[cfg(test)]
@@ -277,7 +295,7 @@ mod test {
     use cards::{Card, Hand, Rank, Suit};
 
     #[test]
-    fn score_fifteens_0() {
+    fn fifteens_0() {
         let cards = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Ace, Suit::Hearts),
@@ -289,13 +307,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_fifteens(&hand, &starter);
+        let score = fifteens(&hand, &starter);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_fifteens_2() {
+    fn fifteens_2() {
         let cards = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Ace, Suit::Hearts),
@@ -307,13 +325,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_fifteens(&hand, &starter);
+        let score = fifteens(&hand, &starter);
 
         assert_eq!(score, 2);
     }
 
     #[test]
-    fn score_fifteens_16() {
+    fn fifteens_16() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -325,13 +343,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_fifteens(&hand, &starter);
+        let score = fifteens(&hand, &starter);
 
         assert_eq!(score, 16);
     }
 
     #[test]
-    fn score_pairs_0() {
+    fn pairs_0() {
         let cards = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Two, Suit::Hearts),
@@ -343,13 +361,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_pairs_one_pair_without_starter_2() {
+    fn pairs_one_pair_without_starter_2() {
         let cards = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -361,13 +379,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 2);
     }
 
     #[test]
-    fn score_pairs_one_pair_with_starter_2() {
+    fn pairs_one_pair_with_starter_2() {
         let cards = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Two, Suit::Hearts),
@@ -379,13 +397,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 2);
     }
 
     #[test]
-    fn score_pairs_two_pair_4() {
+    fn pairs_two_pair_4() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -397,13 +415,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 4);
     }
 
     #[test]
-    fn score_pairs_three_of_a_kind_6() {
+    fn pairs_three_of_a_kind_6() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -415,13 +433,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 6);
     }
 
     #[test]
-    fn score_pairs_four_of_a_kind_12() {
+    fn pairs_four_of_a_kind_12() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -433,13 +451,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_pairs(&hand, &starter);
+        let score = pairs(&hand, &starter);
 
         assert_eq!(score, 12);
     }
 
     #[test]
-    fn score_runs_0() {
+    fn runs_0() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -451,13 +469,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_runs_three_card_run_3() {
+    fn runs_three_card_run_3() {
         let cards = vec![
             Card::new(Rank::Four, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -469,13 +487,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 3);
     }
 
     #[test]
-    fn score_runs_two_three_card_runs_without_starter_6() {
+    fn runs_two_three_card_runs_without_starter_6() {
         let cards = vec![
             Card::new(Rank::Four, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -487,13 +505,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 6);
     }
 
     #[test]
-    fn score_runs_two_three_card_runs_with_starter_6() {
+    fn runs_two_three_card_runs_with_starter_6() {
         let cards = vec![
             Card::new(Rank::Four, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -505,13 +523,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 6);
     }
 
     #[test]
-    fn score_runs_four_three_card_runs_with_starter_12() {
+    fn runs_four_three_card_runs_with_starter_12() {
         let cards = vec![
             Card::new(Rank::Six, Suit::Clubs),
             Card::new(Rank::Four, Suit::Hearts),
@@ -523,13 +541,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 12);
     }
 
     #[test]
-    fn score_runs_four_card_run_without_starter_4() {
+    fn runs_four_card_run_without_starter_4() {
         let cards = vec![
             Card::new(Rank::Three, Suit::Clubs),
             Card::new(Rank::Four, Suit::Hearts),
@@ -541,13 +559,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 4);
     }
 
     #[test]
-    fn score_runs_four_card_run_with_starter_4() {
+    fn runs_four_card_run_with_starter_4() {
         let cards = vec![
             Card::new(Rank::Three, Suit::Clubs),
             Card::new(Rank::Four, Suit::Hearts),
@@ -559,13 +577,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 4);
     }
 
     #[test]
-    fn score_runs_two_four_card_runs_4() {
+    fn runs_two_four_card_runs_4() {
         let cards = vec![
             Card::new(Rank::Three, Suit::Clubs),
             Card::new(Rank::Four, Suit::Hearts),
@@ -577,13 +595,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 8);
     }
 
     #[test]
-    fn score_runs_five_card_run_5() {
+    fn runs_five_card_run_5() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Hearts),
@@ -595,13 +613,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_runs(&hand, &starter);
+        let score = runs(&hand, &starter);
 
         assert_eq!(score, 5);
     }
 
     #[test]
-    fn score_flushes_four_card_flush_not_crib_flush_on_starter_0() {
+    fn flushes_four_card_flush_not_crib_flush_on_starter_0() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Clubs),
@@ -613,13 +631,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_flushes(&hand, &starter, /*is_crib=*/ false);
+        let score = flushes(&hand, &starter, /*is_crib=*/ false);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_flushes_four_card_flush_not_crib_4() {
+    fn flushes_four_card_flush_not_crib_4() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Clubs),
@@ -631,13 +649,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_flushes(&hand, &starter, /*is_crib=*/ false);
+        let score = flushes(&hand, &starter, /*is_crib=*/ false);
 
         assert_eq!(score, 4);
     }
 
     #[test]
-    fn score_flushes_four_card_flush_crib_0() {
+    fn flushes_four_card_flush_crib_0() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Clubs),
@@ -649,13 +667,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_flushes(&hand, &starter, /*is_crib=*/ true);
+        let score = flushes(&hand, &starter, /*is_crib=*/ true);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_flushes_five_card_flush_not_crib_5() {
+    fn flushes_five_card_flush_not_crib_5() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Clubs),
@@ -667,13 +685,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_flushes(&hand, &starter, /*is_crib=*/ false);
+        let score = flushes(&hand, &starter, /*is_crib=*/ false);
 
         assert_eq!(score, 5);
     }
 
     #[test]
-    fn score_flushes_five_card_flush_crib_5() {
+    fn flushes_five_card_flush_crib_5() {
         let cards = vec![
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Three, Suit::Clubs),
@@ -685,13 +703,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_flushes(&hand, &starter, /*is_crib=*/ true);
+        let score = flushes(&hand, &starter, /*is_crib=*/ true);
 
         assert_eq!(score, 5);
     }
 
     #[test]
-    fn score_nobs_no_jack_0() {
+    fn nobs_no_jack_0() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -703,13 +721,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_nobs(&hand, &starter);
+        let score = nobs(&hand, &starter);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_nobs_no_matching_jack_0() {
+    fn nobs_no_matching_jack_0() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -721,13 +739,13 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_nobs(&hand, &starter);
+        let score = nobs(&hand, &starter);
 
         assert_eq!(score, 0);
     }
 
     #[test]
-    fn score_nobs_matching_jack_1() {
+    fn nobs_matching_jack_1() {
         let cards = vec![
             Card::new(Rank::Five, Suit::Clubs),
             Card::new(Rank::Five, Suit::Hearts),
@@ -739,7 +757,7 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_nobs(&hand, &starter);
+        let score = nobs(&hand, &starter);
 
         assert_eq!(score, 1);
     }

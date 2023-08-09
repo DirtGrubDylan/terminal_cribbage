@@ -21,7 +21,7 @@
 //! [here are the rules]: https://en.wikipedia.org/wiki/Rules_of_cribbage
 //! [GitHub Repository]: https://github.com/DirtGrubDylan/terminal_cribbage
 
-extern crate rand;
 extern crate itertools;
+extern crate rand;
 
 pub mod cards;
