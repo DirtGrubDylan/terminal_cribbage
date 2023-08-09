@@ -127,7 +127,7 @@ impl Hand {
             .map(|index| self.0.remove(index))
     }
 
-    /// Returns a `&[Vec]<[Card]>` as a representation of the [`Hand`].
+    /// Returns a &[`Vec`]<[`Card`]> as a representation of the [`Hand`].
     ///
     /// # Examples
     ///
