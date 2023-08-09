@@ -36,15 +36,23 @@ use std::iter;
 
 use cards::{Card, Hand, Rank, Suit};
 
-/// Returns a positive score if combinations of [`Card`] scores in [`Hand`] total to `15`.
+/// Returns the score of [`Hand`] and starter [`Card`], influenced if the [`Hand`] is a "crib".
 ///
 /// # Panics
 ///
-/// Panics if this method finds more combinations adding to `15` then can fit into a [`u32`].
+/// Panics if:
+///   * This method finds more combinations adding to `15` then can fit into a [`u32`].
+///   * This method finds more matching pairs then can fit into a [`u32`].
+///   * There is a [`Rank`] variant who's enum value is greater than `12`.
 ///
-/// This counts all combinations of 2, 3, 4, and 5 cards.
-///
-/// A [`Card`] score is based on [`Card::score`].
+/// This counts all combinations of scoring:
+///   * [`fifteens`] scores all combination of [`Card`]s totalling to `15`.
+///   * [`pairs`] scores all pairs of [`Card`]s whose [`Rank`]s match.
+///   * [`runs`] scores all combination of [`Card`]s whose [`Rank`]s are in sequential order.
+///   * [`flush`] scores if 4 or 5 of the [`Card`]'s [`Suit`] matches.
+///       * 4 [`Card`] flushes do not count if it depends on the starter.
+///       * If [`Hand`] is a "crib", only 5 [`Card`] flushes count.
+///   * [`nobs`] scores if [`Hand`] contains a [`Rank::Jack`] whose [`Suit`] matches the starter.
 ///
 /// # Examples
 ///
@@ -61,14 +69,33 @@ use cards::{Card, Hand, Rank, Suit};
 ///
 /// let starter = Card::new(Rank::Five, Suit::Clubs);
 ///
+/// // Highest scoring hand in cribbage by the way!
 /// let hand = Hand::from(cards);
 ///
-/// let score = score::fifteens(&hand, &starter);
+/// let score = score::total(&hand, &starter, /*is_crib=*/ false);
 ///
-/// assert_eq!(score, 16);
+/// assert_eq!(score, 29);
 /// ```
 #[must_use]
-pub fn fifteens(hand: &Hand, starter: &Card) -> u32 {
+pub fn total(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
+    fifteens(hand, starter)
+        + pairs(hand, starter)
+        + runs(hand, starter)
+        + flushes(hand, starter, is_crib)
+        + nobs(hand, starter)
+}
+
+/// Returns a positive score if combinations of [`Card`] scores in [`Hand`] total to `15`.
+///
+/// # Panics
+///
+/// Panics if this method finds more combinations adding to `15` then can fit into a [`u32`].
+///
+/// This counts all combinations of 2, 3, 4, and 5 cards.
+///
+/// A [`Card`] score is based on [`Card::score`].
+#[must_use]
+fn fifteens(hand: &Hand, starter: &Card) -> u32 {
     let score_per_fifteen = 2;
 
     let hand_starter_iter = hand.as_vec().iter().chain(iter::once(starter));
@@ -90,33 +117,8 @@ pub fn fifteens(hand: &Hand, starter: &Card) -> u32 {
 ///
 /// This counts all pairs matching [`Rank`]s in the [`Card`]s. A three-of-a-kind is 3 pairs.
 /// While a four-of-a-kind is 6 pairs.
-///
-/// # Examples
-///
-/// ```
-/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
-/// use libterminal_cribbage::cards::score;
-///
-/// let cards = vec![
-///     Card::new(Rank::Six, Suit::Clubs),
-///     Card::new(Rank::Four, Suit::Clubs),
-///     Card::new(Rank::Four, Suit::Hearts),
-///     Card::new(Rank::Four, Suit::Spades),
-/// ];
-///
-/// let starter_1 = Card::new(Rank::Four, Suit::Diamonds);
-/// let starter_2 = Card::new(Rank::Six, Suit::Diamonds);
-///
-/// let hand = Hand::from(cards);
-///
-/// let score_1 = score::pairs(&hand, &starter_1);
-/// let score_2 = score::pairs(&hand, &starter_2);
-///
-/// assert_eq!(score_1, 12);
-/// assert_eq!(score_2, 8);
-/// ```
 #[must_use]
-pub fn pairs(hand: &Hand, starter: &Card) -> u32 {
+fn pairs(hand: &Hand, starter: &Card) -> u32 {
     let score_per_pair = 2;
 
     let number_of_matching_pairs = hand
@@ -137,33 +139,8 @@ pub fn pairs(hand: &Hand, starter: &Card) -> u32 {
 /// # Panics
 ///
 /// Panics if there is a [`Rank`] variant who's enum value is greater than `12`.
-///
-/// # Examples
-///
-/// ```
-/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
-/// use libterminal_cribbage::cards::score;
-///
-/// let cards = vec![
-///     Card::new(Rank::Six, Suit::Clubs),
-///     Card::new(Rank::Four, Suit::Clubs),
-///     Card::new(Rank::Four, Suit::Hearts),
-///     Card::new(Rank::Three, Suit::Clubs),
-/// ];
-///
-/// let starter_1 = Card::new(Rank::Two, Suit::Clubs);
-/// let starter_2 = Card::new(Rank::Three, Suit::Clubs);
-///
-/// let hand = Hand::from(cards);
-///
-/// let score_1 = score::runs(&hand, &starter_1);
-/// let score_2 = score::runs(&hand, &starter_2);
-///
-/// assert_eq!(score_1, 6);
-/// assert_eq!(score_2, 0);
-/// ```
 #[must_use]
-pub fn runs(hand: &Hand, starter: &Card) -> u32 {
+fn runs(hand: &Hand, starter: &Card) -> u32 {
     let mut score = 0;
     let mut max_multiplier = 1;
     let mut max_run = 0;
@@ -214,32 +191,8 @@ pub fn runs(hand: &Hand, starter: &Card) -> u32 {
 /// score is `5`. However, if this is for a "crib" [`Hand`], then all [`Card`]s must match,
 /// including the starter; otherwise, the score is `0`, even if all [`Card`]s in the
 /// [`Hand`] match.
-///
-/// # Examples
-///
-/// ```
-/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
-/// use libterminal_cribbage::cards::score;
-///
-/// let cards = vec![
-///     Card::new(Rank::Ace, Suit::Clubs),
-///     Card::new(Rank::Two, Suit::Clubs),
-///     Card::new(Rank::Three, Suit::Clubs),
-///     Card::new(Rank::Four, Suit::Clubs),
-/// ];
-///
-/// let starter = Card::new(Rank::Five, Suit::Spades);
-///
-/// let hand = Hand::from(cards);
-///
-/// let crib_score = score::flushes(&hand, &starter, /*is_crib=*/ true);
-/// let hand_score = score::flushes(&hand, &starter, /*is_crib=*/ false);
-///
-/// assert_eq!(crib_score, 0);
-/// assert_eq!(hand_score, 4);
-/// ```
 #[must_use]
-pub fn flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
+fn flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
     let hand_vec = hand.as_vec();
 
     let target_suit = hand_vec.get(0).map_or(Suit::Clubs, |card| card.suit);
@@ -260,30 +213,8 @@ pub fn flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
 /// Returns `0` or `1` depending on a [`Rank::Jack`] in the [`Hand`] matching the starter [`Suit`].
 ///
 /// This is called "Nobs".
-///
-/// # Examples
-///
-/// ```
-/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
-/// use libterminal_cribbage::cards::score;
-///
-/// let cards = vec![
-///     Card::new(Rank::Five, Suit::Clubs),
-///     Card::new(Rank::Five, Suit::Hearts),
-///     Card::new(Rank::Five, Suit::Diamonds),
-///     Card::new(Rank::Jack, Suit::Spades),
-/// ];
-///
-/// let starter = Card::new(Rank::Five, Suit::Spades);
-///
-/// let hand = Hand::from(cards);
-///
-/// let score = score::nobs(&hand, &starter);
-///
-/// assert_eq!(score, 1);
-/// ```
 #[must_use]
-pub fn nobs(hand: &Hand, starter: &Card) -> u32 {
+fn nobs(hand: &Hand, starter: &Card) -> u32 {
     let target_jack = Card::new(Rank::Jack, starter.suit);
 
     u32::from(hand.as_vec().iter().any(|card| *card == target_jack))
@@ -293,6 +224,135 @@ pub fn nobs(hand: &Hand, starter: &Card) -> u32 {
 mod test {
     use super::*;
     use cards::{Card, Hand, Rank, Suit};
+
+    #[test]
+    fn total_not_crib_29() {
+        let cards = vec![
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Hearts),
+            Card::new(Rank::Five, Suit::Spades),
+        ];
+
+        let starter = Card::new(Rank::Five, Suit::Clubs);
+
+        // Fifteens - 16
+        // Pairs - 12
+        // Nobs - 1
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ false);
+
+        assert_eq!(score, 29);
+    }
+
+    #[test]
+    fn total_crib_29() {
+        let cards = vec![
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Hearts),
+            Card::new(Rank::Five, Suit::Spades),
+        ];
+
+        let starter = Card::new(Rank::Five, Suit::Clubs);
+
+        // Fifteens - 16
+        // Pairs - 12
+        // Nobs - 1
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ true);
+
+        assert_eq!(score, 29);
+    }
+
+    #[test]
+    fn total_not_crib_20() {
+        let cards = vec![
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+
+        let starter = Card::new(Rank::Seven, Suit::Diamonds);
+
+        // Fifteens - 8
+        // Pairs - 2
+        // Runs - 6
+        // Flush - 4
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ false);
+
+        assert_eq!(score, 20);
+    }
+
+    #[test]
+    fn total_crib_16() {
+        let cards = vec![
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+
+        let starter = Card::new(Rank::Seven, Suit::Diamonds);
+
+        // Fifteens - 8
+        // Pairs - 2
+        // Runs - 6
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ true);
+
+        assert_eq!(score, 16);
+    }
+
+    #[test]
+    fn total_not_crib_13() {
+        let cards = vec![
+            Card::new(Rank::Ten, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+
+        let starter = Card::new(Rank::Nine, Suit::Clubs);
+
+        // Fifteens - 2
+        // Runs - 5
+        // Flush - 5
+        // Nobs - 1
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ false);
+
+        assert_eq!(score, 13);
+    }
+
+    #[test]
+    fn total_crib_13() {
+        let cards = vec![
+            Card::new(Rank::Ten, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+
+        let starter = Card::new(Rank::Nine, Suit::Clubs);
+
+        // Fifteens - 2
+        // Runs - 5
+        // Flush - 5
+        // Nobs - 1
+        let hand = Hand::from(cards);
+
+        let score = total(&hand, &starter, /*is_crib=*/ true);
+
+        assert_eq!(score, 13);
+    }
 
     #[test]
     fn fifteens_0() {

@@ -2,6 +2,9 @@ use std::fmt;
 
 use cards::card::Card;
 
+#[cfg(doc)]
+use cards::card::Rank;
+
 /// The [`Hand`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
@@ -68,8 +71,7 @@ impl Hand {
     ///
     /// # Errors
     ///
-    /// Will return `Err` if the index is out of bounds or the [`Hand`] has no cards.
-    /// [`Card`]: struct.Card.html
+    /// If the index is out of bounds or the [`Hand`] has no cards.
     ///
     /// # Examples
     ///
