@@ -2,18 +2,16 @@ use std::fmt;
 
 use cards::card::Card;
 
-/// The `Hand` struct is a wrapper for a vector of [`Card`]s.
+/// The [`Hand`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
-///
-/// [`Card`]: struct.Card.html
 #[derive(Debug, PartialEq)]
 pub struct Hand(pub Vec<Card>);
 
 impl Hand {
-    /// Constructs a new `Hand`.
+    /// Constructs a new [`Hand`].
     ///
-    /// The `Hand` is constructed with the internal vector being new.
+    /// The [`Hand`] is constructed with the internal vector being new.
     ///
     /// # Examples
     ///
@@ -31,13 +29,10 @@ impl Hand {
         Hand(card_vector)
     }
 
-    /// Adds a [`Card`] to `Hand`.
+    /// Adds a [`Card`] to [`Hand`].
     ///
-    /// In addition to adding the [`Card`] to the `Hand`, the internal vector is also sorted by the
+    /// In addition to adding the [`Card`] to the [`Hand`], the internal vector is also sorted by the
     /// [`Card`]'s [`Rank`].
-    ///
-    /// [`Card`]: struct.Card.html
-    /// [`Rank`]: enum.Rank.html
     ///
     /// # Examples
     ///
@@ -69,11 +64,11 @@ impl Hand {
         self.0.sort();
     }
 
-    /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
+    /// Discard a [`Card`] from [`Hand`] by index. Returns [`Err`] if the index is out of bounds.
     ///
     /// # Errors
     ///
-    /// Will return `Err` if the index is out of bounds or the `Hand` has no cards.
+    /// Will return `Err` if the index is out of bounds or the [`Hand`] has no cards.
     /// [`Card`]: struct.Card.html
     ///
     /// # Examples
@@ -100,9 +95,7 @@ impl Hand {
         Ok(self.0.remove(index_of_card))
     }
 
-    /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
-    ///
-    /// [`Card`]: struct.Card.html
+    /// Discard a [`Card`] from [`Hand`] that matching the given [`Card`].
     ///
     /// # Examples
     ///
@@ -132,9 +125,7 @@ impl Hand {
             .map(|index| self.0.remove(index))
     }
 
-    /// Returns a borrowed `Vec<[`Card`]>` as a representation of the `Hand`.
-    ///
-    /// [`Card`]: struct.Card.html
+    /// Returns a borrowed `Vec<[`Card`]>` as a representation of the [`Hand`].
     ///
     /// # Examples
     ///
@@ -180,9 +171,7 @@ impl fmt::Display for Hand {
     }
 }
 
-/// Converts a `Vec<[Card]>` to a `Hand`.
-///    
-/// [Card]: struct.Card.html
+/// Converts a [`Vec<Card>`] to a [`Hand`].
 ///    
 /// # Examples
 ///

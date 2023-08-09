@@ -4,11 +4,9 @@ use rand::seq::SliceRandom;
 
 use cards::{Card, Rank, Suit};
 
-/// The `Deck` struct is a wrapper for a vector of [`Card`]s.
+/// The [`Deck`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual deck of [`Card`]s
-///
-/// [`Card`]: struct.Card.html
 #[derive(Debug, PartialEq)]
 pub struct Deck(pub Vec<Card>);
 
@@ -17,11 +15,6 @@ impl Deck {
     ///
     /// The `Deck` is constructed the same way every time. Starting with [`Suit::Clubs`] through
     /// [`Suit::Spades`], it loops through [`Rank::Ace`] to [`Rank::King`] to build a deck in order.
-    ///
-    /// [`Suit::Clubs`]: enum.Suit.html
-    /// [`Suit::Spades`]: enum.Suit.html
-    /// [`Rank::Ace`]: enum.Rank.html
-    /// [`Rank::King`]: enum.Rank.html
     ///
     /// # Examples
     ///
@@ -61,9 +54,7 @@ impl Deck {
         Deck(cards)
     }
 
-    /// Shuffles the [`Card`]s in a `Deck` in place.
-    ///
-    /// [`Card`]: struct.Card.html
+    /// Shuffles the [`Card`]s in a [`Deck`] in place.
     ///
     /// # Examples
     ///
@@ -82,9 +73,7 @@ impl Deck {
         self.0.shuffle(&mut rng);
     }
 
-    /// Deals a [`Card`] from the back of the `Deck`.
-    ///
-    /// [`Card`]: struct.Card.html
+    /// Deals a [`Card`] from the back of the [`Deck`].
     ///
     /// # Examples
     ///

@@ -1,6 +1,6 @@
 //! Traits, helpers, and type definitions for Card functionality.
 //!
-//! The `libterminal_cribbage::cards` module contains a number of common things you will need when
+//! This module contains a number of common things you will need when
 //! using cards during the game.
 //!
 //! ## Card, Rank, and Suit
@@ -42,8 +42,8 @@
 //! ## Deck and Hand
 //!
 //! In Cribbage there are two different types of [`Card`] piles. These are used through out the
-//! game, and to help with this `libterminal_cribbage::cards` comes with two handy structs, [`Deck`]
-//! and `Hand`, which wrap these piles. The wrappers provide a way to reduce the number of calls
+//! game, and to help with this this module comes with two handy structs, [`Deck`]
+//! and [`Hand`], which wrap these piles. The wrappers provide a way to reduce the number of calls
 //! and collections for compiling and manipulating [`Card`] piles.
 //!
 //! For example, [`Deck`] provides a way to create a new deck of [`Card`]s, and shuffle them:
@@ -60,8 +60,8 @@
 //! println!("Shuffled deck of cards: {}", deck);
 //! ```
 //!
-//! `Hand` provides an easy way to keep the cards in order, and discard:
-//! `Hand` example:
+//! [`Hand`] provides an easy way to keep the cards in order, and discard:
+//! [`Hand`] example:
 //!
 //! ```
 //! use libterminal_cribbage::cards::{Deck, Card, Hand, Rank, Suit};
@@ -102,7 +102,7 @@
 //! let mut hand = Hand::new();
 //!
 //! deck.shuffle();
-
+//!
 //! for _ in 0..6 {
 //!     hand.add_card(deck.deal().unwrap());
 //! }
@@ -111,11 +111,6 @@
 //! println!("Discarded Card: {}", hand.discard(0).unwrap());
 //!
 //! ```
-//!
-//! [`Card`]: struct.Card.html
-//! [`Deck`]: struct.Deck.html
-//! [`Rank`]: enum.Rank.html
-//! [`Suit`]: enum.Suit.html
 
 pub use self::card::{Card, Rank, Suit};
 pub use self::deck::Deck;

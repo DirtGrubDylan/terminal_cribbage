@@ -30,22 +30,16 @@
 //!   * 31 (play stack total is 31) - 2pts
 //!   * Go (played last card) - 1pt
 //!   * His Heels (jack is starter and player is dealer) - 2pts
-//!
-//! [`Card`]: struct.Card.html
-//! [`Hand`]: struct.Hand.html
 use itertools::Itertools;
 use std::iter;
 
 use cards::{Card, Hand, Rank, Suit};
 
-/// Returns a positive score if combinations of [`Cards`] scores in [`Hand`] total to 15.
+/// Returns a positive score if combinations of [`Card`] scores in [`Hand`] total to 15.
 ///
 /// This counts all combinations of 2, 3, 4, and 5 cards.
 ///
 /// A [`Card`] score is based on [`Card::score`].
-///
-/// [`Hand`]: struct.Hand.html
-/// [`Card`]: struct.Card.html
 ///
 /// # Examples
 ///
@@ -82,14 +76,10 @@ pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
     score_per_fifteen * (number_of_fifteen_sums as u32)
 }
 
-/// Returns a positive score if the [`Cards`] in [`Hand`] with the starter match [`Rank`].
+/// Returns a positive score if the [`Card`] in [`Hand`] with the starter match [`Rank`].
 ///
 /// This counts all pairs matching [`Rank`]s in the [`Card`]s. A three-of-a-kind is 3 pairs.
 /// While a four-of-a-kind is 6 pairs.
-///
-/// [`Hand`]: struct.Hand.html
-/// [`Card`]: struct.Card.html
-/// [`Rank`]: enum.Rank.html
 ///
 /// # Examples
 ///
@@ -129,13 +119,9 @@ pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
     score_per_pair * (number_of_matching_pairs as u32)
 }
 
-/// Returns a positive score if the [`Cards`] in [`Hand`] with the starter is sequential.
+/// Returns a positive score if the [`Card`] in [`Hand`] with the starter is sequential.
 ///
 /// This can be mutiplicative if there are matching [`Rank`]s in the [`Card`]s.
-///
-/// [`Hand`]: struct.Hand.html
-/// [`Card`]: struct.Card.html
-/// [`Rank`]: enum.Rank.html
 ///
 /// # Examples
 ///
@@ -213,10 +199,6 @@ pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
 /// including the starter; otherwise, the score is `0`, even if all [`Card`]s in the
 /// [`Hand`] match.
 ///
-/// [`Hand`]: struct.Hand.html
-/// [`Card`]: struct.Card.html
-/// [`Suit`]: enum.Suit.html
-///
 /// # Examples
 ///
 /// ```
@@ -261,10 +243,6 @@ pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
 /// Returns `0` or `1` depending on a [`Rank::Jack`] in the [`Hand`] matching the starter [`Suit`].
 ///
 /// This is called "Nobs".
-///
-/// [`Hand`]: struct.Hand.html
-/// [`Rank`]: enum.Rank.html
-/// [`Suit`]: enum.Suit.html
 ///
 /// # Examples
 ///

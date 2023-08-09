@@ -1,6 +1,6 @@
 use std::fmt;
 
-/// `Rank` is a type the represents the rank of a playing card.
+/// [`Rank`] is a type the represents the rank of a playing card.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Rank {
     Ace,
@@ -18,7 +18,7 @@ pub enum Rank {
     King,
 }
 
-/// `Suit` is a type the represents the suit of a playing card.
+/// [`Suit`] is a type the represents the suit of a playing card.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Suit {
     Hearts,
@@ -27,10 +27,7 @@ pub enum Suit {
     Spades,
 }
 
-/// `Card` is a struct that holds the [`Rank`] and [`Suit`] type of a playing card.
-///
-/// [`Rank`]: enum.Rank.html
-/// [`Suit`]: enum.Suit.html
+/// [`Card`] is a struct that holds the [`Rank`] and [`Suit`] type of a playing card.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Card {
     pub rank: Rank,
@@ -38,7 +35,7 @@ pub struct Card {
 }
 
 impl Card {
-    /// Constructs a new `Card`.
+    /// Constructs a new [`Card`].
     ///
     /// # Examples
     ///
@@ -54,7 +51,7 @@ impl Card {
         Card { rank, suit }
     }
 
-    /// Gets the score of a `Card`.
+    /// Gets the score of a [`Card`].
     ///
     /// All scores match the rank, where the [`Rank::Jack`], [`Rank::Queen`], and [`Rank::King`]
     /// cards are all worth 10 and the [`Rank::Ace`] is worth 1.
@@ -70,8 +67,6 @@ impl Card {
     /// assert_eq!(playing_card_1.score(), 1);
     /// assert_eq!(playing_card_2.score(), 10);
     /// ```
-    /// [`Rank`]: enum.Rank.html
-    /// [`Suit`]: enum.Suit.html
     #[must_use]
     pub fn score(&self) -> u32 {
         match self.rank {
