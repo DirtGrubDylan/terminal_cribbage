@@ -70,15 +70,15 @@ use cards::{Card, Hand, Rank, Suit};
 ///   * 31 (play stack total is 31) - 2pts
 ///   * Go (played last card) - 1pt
 ///   * His Heels (jack is starter and player is dealer) - 2pts
-pub fn score_fifteens(hand: &Hand, starter: &Card) -> u32 {
+pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
     unimplemented!()
 }
 
-pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
+pub fn score_pairs(_hand: &Hand, _starter: &Card) -> u32 {
     unimplemented!()
 }
 
-pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
+pub fn score_runs(_hand: &Hand, _starter: &Card) -> u32 {
     unimplemented!()
 }
 
