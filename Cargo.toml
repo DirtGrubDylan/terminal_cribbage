@@ -14,3 +14,5 @@ doc = false
 
 [dependencies]
 rand = { version = "0.8.5", features = ["small_rng"] }
+itertools = "0.11.0"
+

@@ -22,5 +22,6 @@
 //! [GitHub Repository]: https://github.com/DirtGrubDylan/terminal_cribbage
 
 extern crate rand;
+extern crate itertools;
 
 pub mod cards;

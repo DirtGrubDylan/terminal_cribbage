@@ -1,3 +1,6 @@
+use itertools::Itertools;
+use std::iter;
+
 use cards::{Card, Hand, Rank, Suit};
 
 /// This is just a table of all scores based on a [`Hand`] and "starter" [`Card`].
@@ -27,12 +30,6 @@ use cards::{Card, Hand, Rank, Suit};
 /// for (tv, tt) in it {
 ///     println!("{:?} -> {}", tv, tt);
 /// }
-///
-/// let a1 = vec![1, 2, 3];
-/// let a2 = vec![4, 5, 6];
-/// let a3 = 7;
-/// let a4: &Vec<usize> = &a1;
-/// let mut iter = a4.iter().chain(a2.iter()).chain(iter::once(&a3));
 ///
 /// [`Card`]: struct.Card.html
 /// [`Hand`]: struct.Hand.html
@@ -79,7 +76,7 @@ use cards::{Card, Hand, Rank, Suit};
 ///
 /// [`Hand`]: struct.Hand.html
 /// [`Card`]: struct.Card.html
-/// 
+///
 /// # Examples
 ///
 /// ```
@@ -113,7 +110,7 @@ pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
 /// [`Hand`]: struct.Hand.html
 /// [`Card`]: struct.Card.html
 /// [`Rank`]: enum.Rank.html
-/// 
+///
 /// # Examples
 ///
 /// ```
@@ -138,8 +135,26 @@ pub fn score_fifteens(_hand: &Hand, _starter: &Card) -> u32 {
 /// assert_eq!(score_1, 12);
 /// assert_eq!(score_2, 8);
 /// ```
-pub fn score_pairs(_hand: &Hand, _starter: &Card) -> u32 {
-    unimplemented!()
+pub fn score_pairs(hand: &Hand, starter: &Card) -> u32 {
+    // let it: Vec<(Vec<Temp>, u32)> = (1..=5)
+    //     .flat_map(|i| v.iter().copied().combinations(i))
+    //     .map(|vec| (vec.clone(), vec.iter().fold(0, |acc, temp| acc + temp.score())))
+    //     .collect();
+    //
+    // for (tv, tt) in it {
+    //     println!("{:?} -> {}", tv, tt);
+    // }
+    let score_per_pair = 2;
+
+    let number_of_matching_pairs = hand
+        .as_vec()
+        .iter()
+        .chain(iter::once(starter))
+        .tuple_combinations()
+        .filter(|(card_1, card_2)| card_1.rank == card_2.rank)
+        .count();
+
+    score_per_pair * (number_of_matching_pairs as u32)
 }
 
 /// Returns a positive score if the [`Cards`] in [`Hand`] with the starter is sequential.
@@ -149,7 +164,7 @@ pub fn score_pairs(_hand: &Hand, _starter: &Card) -> u32 {
 /// [`Hand`]: struct.Hand.html
 /// [`Card`]: struct.Card.html
 /// [`Rank`]: enum.Rank.html
-/// 
+///
 /// # Examples
 ///
 /// ```
@@ -174,24 +189,56 @@ pub fn score_pairs(_hand: &Hand, _starter: &Card) -> u32 {
 /// assert_eq!(score_1, 6);
 /// assert_eq!(score_2, 0);
 /// ```
-pub fn score_runs(_hand: &Hand, _starter: &Card) -> u32 {
-    let mut multiplier = 1;
+pub fn score_runs(hand: &Hand, starter: &Card) -> u32 {
     let mut score = 0;
+    let mut max_multiplier = 1;
+    let mut max_run = 0;
+    let mut current_run = 0;
 
-    // let mut 
-    //
-    // for card in hand.as_vec().iter().chain(iter::once(starter))
-    //   if 
+    // This is a way to keep track of which ranks we have found using the enum to usize conversion.
+    // Rank::Ace is mapped to index 0 and Rank::King is mapped to index 12
+    let mut ranks_found = [0; 13];
 
-    unimplemented!()
+    hand.as_vec()
+        .iter()
+        .chain(iter::once(starter))
+        .for_each(|card| match ranks_found.get_mut(card.rank as usize) {
+            Some(count) => *count += 1,
+            None => panic!("Rank {:?} not handled", card.rank),
+        });
+
+    for current_multiplier in ranks_found {
+        current_run += 1;
+
+        // If we haven't found a rank reset the current_run.
+        if current_multiplier == 0 {
+            current_run = 0;
+
+            // If we also haven't found a run so far reset the max_multiplier.
+            if max_run < 3 {
+                max_multiplier = 1;
+            }
+        }
+
+        if current_run > max_run {
+            max_run = current_run;
+            max_multiplier *= current_multiplier;
+        }
+    }
+
+    if 3 <= max_run {
+        score = max_run;
+    }
+
+    max_multiplier * score
 }
 
 /// Returns `0`, `4`, or `5` based on the [`Suit`]s of the [`Hand`] and starter [`Card`].
 ///
-/// This is called a flush. If all the [`Card`]s in the [`Hand`] have the same [`Suit`], 
-/// then the score is `4`. If the starter [`Card`] also matches that [`Suit`], then the 
+/// This is called a flush. If all the [`Card`]s in the [`Hand`] have the same [`Suit`],
+/// then the score is `4`. If the starter [`Card`] also matches that [`Suit`], then the
 /// score is `5`. However, if this is for a "crib" [`Hand`], then all [`Card`]s must match,
-/// including the starter; otherwise, the score is `0`, even if all [`Card`]s in the 
+/// including the starter; otherwise, the score is `0`, even if all [`Card`]s in the
 /// [`Hand`] match.
 ///
 /// [`Hand`]: struct.Hand.html
@@ -346,7 +393,7 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_fifteens(&hand, &starter);
+        let score = score_pairs(&hand, &starter);
 
         assert_eq!(score, 0);
     }
@@ -436,7 +483,7 @@ mod test {
 
         let hand = Hand::from(cards);
 
-        let score = score_fifteens(&hand, &starter);
+        let score = score_pairs(&hand, &starter);
 
         assert_eq!(score, 12);
     }
@@ -514,6 +561,24 @@ mod test {
     }
 
     #[test]
+    fn score_runs_four_three_card_runs_with_starter_12() {
+        let cards = vec![
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Hearts),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Spades),
+        ];
+
+        let starter = Card::new(Rank::Five, Suit::Spades);
+
+        let hand = Hand::from(cards);
+
+        let score = score_runs(&hand, &starter);
+
+        assert_eq!(score, 12);
+    }
+
+    #[test]
     fn score_runs_four_card_run_without_starter_4() {
         let cards = vec![
             Card::new(Rank::Three, Suit::Clubs),
@@ -564,7 +629,7 @@ mod test {
 
         let score = score_runs(&hand, &starter);
 
-        assert_eq!(score, 4);
+        assert_eq!(score, 8);
     }
 
     #[test]
