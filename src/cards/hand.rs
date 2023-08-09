@@ -74,10 +74,10 @@ impl Hand {
     /// # Errors
     ///
     /// Will return `Err` if the index is out of bounds or the `Hand` has no cards.
+    /// [`Card`]: struct.Card.html
     ///
     /// # Examples
     ///
-    /// [`Card`]: struct.Card.html
     /// ```
     /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
     ///
@@ -102,9 +102,10 @@ impl Hand {
 
     /// Discard a [`Card`] from `Hand` by index. Returns `Err` if the index is out of bounds.
     ///
+    /// [`Card`]: struct.Card.html
+    ///
     /// # Examples
     ///
-    /// [`Card`]: struct.Card.html
     /// ```
     /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
     ///
@@ -133,9 +134,10 @@ impl Hand {
 
     /// Returns a borrowed `Vec<[`Card`]>` as a representation of the `Hand`.
     ///
+    /// [`Card`]: struct.Card.html
+    ///
     /// # Examples
     ///
-    /// [`Card`]: struct.Card.html
     /// ```
     /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
     ///
@@ -179,9 +181,10 @@ impl fmt::Display for Hand {
 
 /// Converts a `Vec<[Card]>` to a `Hand`.
 ///    
+/// [Card]: struct.Card.html
+///    
 /// # Examples
 ///
-/// [Card]: struct.Card.html
 /// ```
 /// use libterminal_cribbage::cards::{Hand, Card, Rank, Suit};
 ///

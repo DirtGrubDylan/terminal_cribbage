@@ -100,6 +100,35 @@ pub fn score_flushes(hand: &Hand, starter: &Card, is_crib: bool) -> u32 {
     }
 }
 
+/// Returns `1` if a [`Rank::Jack`] in the [`Hand`] matches the starter [`Suit`]. Otherwise, returns `0`.
+///
+/// This is called "Nobs".
+///
+/// [`Hand`]: struct.Hand.html
+/// [`Rank`]: enum.Rank.html
+/// [`Suit`]: enum.Suit.html
+///
+/// # Examples
+///
+/// ```
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+/// use libterminal_cribbage::cards::score;
+///
+/// let cards = vec![
+///     Card::new(Rank::Five, Suit::Clubs),
+///     Card::new(Rank::Five, Suit::Hearts),
+///     Card::new(Rank::Five, Suit::Diamonds),
+///     Card::new(Rank::Jack, Suit::Spades),
+/// ];
+///
+/// let starter = Card::new(Rank::Five, Suit::Spades);
+///
+/// let hand = Hand::from(cards);
+///
+/// let score = score_nobs(&hand, &starter);
+///
+/// assert_eq!(score, 1);
+/// ```
 pub fn score_nobs(hand: &Hand, starter: &Card) -> u32 {
     let target_jack = Card::new(Rank::Jack, starter.suit);
 
