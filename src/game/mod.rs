@@ -7,4 +7,8 @@
 //! * Count hands
 //! * Repeat until one player reaches 121pts
 
-mod controller
+pub use self::controller::Controller;
+pub use self::predetermined_controller::PredeterminedController;
+
+mod controller;
+mod predetermined_controller;

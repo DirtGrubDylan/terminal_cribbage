@@ -1,8 +1,16 @@
 //! The trait and structs for controlling how players choose their [`Card`]s from their [`Hand`].
 
-/// The `trait` for controlling how players choose their [`Card`]s from their [`Hand`].
-trait Controller {
+#[cfg(doc)]
+use cards::Hand;
 
-    /// Get an index for a [`Card`] from a given array of [`Card`]s.
-    fn get_card_index(available_cards: &[Card]) -> usize;
+use cards::Card;
+
+/// The `trait` for controlling how players choose their [`Card`]s from their [`Hand`].
+pub trait Controller {
+
+    /// Get a possible index for a [`Card`] from a given array of [`Card`]s.
+    ///
+    /// This required `&mut self` because it is assumed that some internal
+    /// state of the implementors needs to change to determine the indices.
+    fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize>;
 }

@@ -25,3 +25,4 @@ extern crate itertools;
 extern crate rand;
 
 pub mod cards;
+pub mod game;
