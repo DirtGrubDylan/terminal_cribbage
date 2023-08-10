@@ -1,6 +1,7 @@
 use std::fmt;
 
 use cards::card::Card;
+use cards::score;
 
 #[cfg(doc)]
 use cards::card::Rank;
@@ -155,6 +156,40 @@ impl Hand {
     #[must_use]
     pub fn as_vec(&self) -> &Vec<Card> {
         &self.0
+    }
+
+    /// Returns the score of the [`Hand`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if:
+    ///   * This method finds more combinations adding to `15` then can fit into a [`u32`].
+    ///   * This method finds more matching pairs then can fit into a [`u32`].
+    ///   * There is a [`Rank`] variant who's enum value is greater than `12`.///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Jack, Suit::Clubs),
+    ///     Card::new(Rank::Five, Suit::Diamonds),
+    ///     Card::new(Rank::Five, Suit::Hearts),
+    ///     Card::new(Rank::Five, Suit::Spades),
+    /// ];
+    ///
+    /// let starter = Card::new(Rank::Five, Suit::Clubs);
+    ///
+    /// // Highest scoring hand in cribbage by the way!
+    /// let hand = Hand::from(cards);
+    ///
+    /// let score = hand.total(&starter, /*is_crib=*/ false);
+    ///
+    /// assert_eq!(score, 29);
+    /// ```
+    #[must_use]
+    pub fn total(&self, starter: &Card, is_crib: bool) -> u32 {
+        score::total(self, starter, is_crib)
     }
 }
 
