@@ -49,7 +49,7 @@ use cards::{Card, Hand, Rank, Suit};
 ///   * [`fifteens`] scores all combination of [`Card`]s totalling to `15`.
 ///   * [`pairs`] scores all pairs of [`Card`]s whose [`Rank`]s match.
 ///   * [`runs`] scores all combination of [`Card`]s whose [`Rank`]s are in sequential order.
-///   * [`flush`] scores if 4 or 5 of the [`Card`]'s [`Suit`] matches.
+///   * [`flushes`] scores if 4 or 5 of the [`Card`]'s [`Suit`] matches.
 ///       * 4 [`Card`] flushes do not count if it depends on the starter.
 ///       * If [`Hand`] is a "crib", only 5 [`Card`] flushes count.
 ///   * [`nobs`] scores if [`Hand`] contains a [`Rank::Jack`] whose [`Suit`] matches the starter.
