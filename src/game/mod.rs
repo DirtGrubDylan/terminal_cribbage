@@ -8,7 +8,9 @@
 //! * Repeat until one player reaches 121pts
 
 pub use self::controller::Controller;
+pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
 
 mod controller;
+mod player;
 mod predetermined_controller;
