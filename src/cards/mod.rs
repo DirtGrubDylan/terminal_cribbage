@@ -76,18 +76,8 @@
 //! hand.add_card(Card::new(Rank::Two, Suit::Hearts));
 //! hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
 //!
-//! assert_eq!(
-//!     hand.0,
-//!     vec![Card::new(Rank::Ace, Suit::Clubs),
-//!          Card::new(Rank::Two, Suit::Hearts),
-//!          Card::new(Rank::Two, Suit::Spades),
-//!          Card::new(Rank::Three, Suit::Hearts),
-//!          Card::new(Rank::Four, Suit::Spades),
-//!          Card::new(Rank::Ten, Suit::Clubs),
-//!          Card::new(Rank::Queen, Suit::Diamonds)]);
-//!
-//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Four, Suit::Spades)));
-//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Ten, Suit::Clubs)));
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Queen, Suit::Diamonds)));
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Two, Suit::Hearts)));
 //! ```
 //!
 //! ## Dealing and Discarding
@@ -115,8 +105,9 @@
 pub use self::card::{Card, Rank, Suit};
 pub use self::deck::Deck;
 pub use self::hand::Hand;
+pub use self::score::total;
 
 mod card;
 mod deck;
 mod hand;
-pub mod score;
+mod score;

@@ -13,7 +13,7 @@ use game::Controller;
 #[derive(Debug, PartialEq)]
 pub struct PredeterminedController {
     /// The indicies for choosing [`Card`]s for a player.
-    pub card_indices: VecDeque<usize>,
+    card_indices: VecDeque<usize>,
 }
 
 impl Controller for PredeterminedController {
@@ -72,17 +72,28 @@ impl From<Vec<usize>> for PredeterminedController {
     /// use libterminal_cribbage::game::PredeterminedController;
     /// use std::collections::VecDeque;
     ///
-    /// let expected = PredeterminedController {
-    ///     card_indices: VecDeque::from([1, 2, 3]),
-    /// };
-    ///
     /// let result = PredeterminedController::from(vec![1, 2, 3]);
-    ///
-    /// assert_eq!(result, expected);
     /// ```
     fn from(vec: Vec<usize>) -> Self {
         let card_indices = VecDeque::from(vec);
 
         PredeterminedController { card_indices }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::VecDeque;
+
+    #[test]
+    fn test_from_vec() {
+        let expected = PredeterminedController {
+            card_indices: VecDeque::from([1, 2, 3]),
+        };
+
+        let result = PredeterminedController::from(vec![1, 2, 3]);
+
+        assert_eq!(result, expected);
     }
 }

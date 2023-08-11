@@ -1,7 +1,7 @@
 use std::fmt;
 
-use cards::card::Card;
 use cards::score;
+use cards::Card;
 
 #[cfg(doc)]
 use cards::card::Rank;
@@ -10,7 +10,7 @@ use cards::card::Rank;
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
 #[derive(Debug, PartialEq)]
-pub struct Hand(pub Vec<Card>);
+pub struct Hand(Vec<Card>);
 
 impl Hand {
     /// Constructs a new [`Hand`].
@@ -23,8 +23,6 @@ impl Hand {
     /// use libterminal_cribbage::cards::Hand;
     ///
     /// let hand = Hand::new();
-    ///
-    /// assert!(hand.0.is_empty());
     /// ```
     #[must_use]
     pub fn new() -> Hand {
@@ -34,9 +32,6 @@ impl Hand {
     }
 
     /// Adds a [`Card`] to [`Hand`].
-    ///
-    /// In addition to adding the [`Card`] to the [`Hand`], the internal vector is also sorted by the
-    /// [`Card`]'s [`Rank`].
     ///
     /// # Examples
     ///
@@ -52,20 +47,9 @@ impl Hand {
     /// hand.add_card(Card::new(Rank::Queen, Suit::Diamonds));
     /// hand.add_card(Card::new(Rank::Two, Suit::Hearts));
     /// hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
-    ///
-    /// assert_eq!(
-    ///     hand.0,
-    ///     vec![Card::new(Rank::Ace, Suit::Clubs),
-    ///          Card::new(Rank::Two, Suit::Hearts),
-    ///          Card::new(Rank::Two, Suit::Spades),
-    ///          Card::new(Rank::Three, Suit::Hearts),
-    ///          Card::new(Rank::Four, Suit::Spades),
-    ///          Card::new(Rank::Ten, Suit::Clubs),
-    ///          Card::new(Rank::Queen, Suit::Diamonds)]);
     /// ```
     pub fn add_card(&mut self, card: Card) {
         self.0.push(card);
-        self.0.sort();
     }
 
     /// Discard a [`Card`] from [`Hand`] by index. Returns [`Err`] if the index is out of bounds.
@@ -91,7 +75,7 @@ impl Hand {
     /// assert_eq!(card, Ok(Card::new(Rank::Three, Suit::Hearts)));
     /// ```
     pub fn discard(&mut self, index_of_card: usize) -> Result<Card, String> {
-        if index_of_card >= self.0.len() {
+        if self.0.len() <= index_of_card {
             return Err("Out of Bounds!".to_string());
         }
 
@@ -145,9 +129,9 @@ impl Hand {
     /// let mut hand = Hand::new();
     ///
     /// hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
-    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
-    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
     /// hand.add_card(Card::new(Rank::Two, Suit::Spades));
+    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
     ///
     /// let hand_as_vec = hand.as_vec();
     ///
@@ -166,6 +150,7 @@ impl Hand {
     ///   * This method finds more combinations adding to `15` then can fit into a [`u32`].
     ///   * This method finds more matching pairs then can fit into a [`u32`].
     ///   * There is a [`Rank`] variant who's enum value is greater than `12`.///
+    ///
     /// # Examples
     ///
     /// ```
@@ -191,6 +176,30 @@ impl Hand {
     pub fn total(&self, starter: &Card, is_crib: bool) -> u32 {
         score::total(self, starter, is_crib)
     }
+
+    /// Indicates if the [`Hand`] is empty.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Jack, Suit::Clubs),
+    ///     Card::new(Rank::Five, Suit::Diamonds),
+    ///     Card::new(Rank::Five, Suit::Hearts),
+    ///     Card::new(Rank::Five, Suit::Spades),
+    /// ];
+    ///
+    /// // Highest scoring hand in cribbage by the way!
+    /// let hand = Hand::from(cards);
+    ///
+    /// assert!(!hand.is_empty());
+    /// ```
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl Default for Hand {
@@ -210,7 +219,7 @@ impl fmt::Display for Hand {
 }
 
 /// Converts a [`Vec<Card>`] to a [`Hand`].
-///    
+///
 /// # Examples
 ///
 /// ```
@@ -271,12 +280,12 @@ mod test {
             hand.0,
             vec![
                 Card::new(Rank::Ace, Suit::Clubs),
-                Card::new(Rank::Two, Suit::Hearts),
-                Card::new(Rank::Two, Suit::Spades),
-                Card::new(Rank::Three, Suit::Hearts),
                 Card::new(Rank::Four, Suit::Spades),
+                Card::new(Rank::Three, Suit::Hearts),
+                Card::new(Rank::Two, Suit::Spades),
+                Card::new(Rank::Queen, Suit::Diamonds),
+                Card::new(Rank::Two, Suit::Hearts),
                 Card::new(Rank::Ten, Suit::Clubs),
-                Card::new(Rank::Queen, Suit::Diamonds)
             ]
         );
     }
@@ -298,7 +307,7 @@ mod test {
             card = hand.discard(0);
         }
 
-        assert_eq!(card, Ok(Card::new(Rank::Four, Suit::Spades)));
+        assert_eq!(card, Ok(Card::new(Rank::Two, Suit::Spades)));
 
         card = hand.discard(0);
 
@@ -317,9 +326,9 @@ mod test {
         let mut hand = Hand::new();
 
         hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
-        hand.add_card(Card::new(Rank::Four, Suit::Spades));
-        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
         hand.add_card(Card::new(Rank::Two, Suit::Spades));
+        hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+        hand.add_card(Card::new(Rank::Four, Suit::Spades));
 
         let hand_as_vec = hand.as_vec();
 

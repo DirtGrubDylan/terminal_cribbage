@@ -57,8 +57,8 @@ use cards::{Card, Hand, Rank, Suit};
 /// # Examples
 ///
 /// ```
-/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
-/// use libterminal_cribbage::cards::score;
+/// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit, total};
+/// // use libterminal_cribbage::cards::total;
 ///
 /// let cards = vec![
 ///     Card::new(Rank::Jack, Suit::Clubs),
@@ -72,7 +72,7 @@ use cards::{Card, Hand, Rank, Suit};
 /// // Highest scoring hand in cribbage by the way!
 /// let hand = Hand::from(cards);
 ///
-/// let score = score::total(&hand, &starter, /*is_crib=*/ false);
+/// let score = total(&hand, &starter, /*is_crib=*/ false);
 ///
 /// assert_eq!(score, 29);
 /// ```
