@@ -242,9 +242,9 @@ impl From<Vec<Card>> for Hand {
     fn from(cards: Vec<Card>) -> Self {
         let mut hand = Hand::new();
 
-        for card in cards {
+        cards.into_iter().for_each(|card| {
             hand.add_card(card);
-        }
+        });
 
         hand
     }
