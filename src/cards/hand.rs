@@ -129,9 +129,9 @@ impl Hand {
     /// let mut hand = Hand::new();
     ///
     /// hand.add_card(Card::new(Rank::Ace, Suit::Clubs));
-    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
-    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
     /// hand.add_card(Card::new(Rank::Two, Suit::Spades));
+    /// hand.add_card(Card::new(Rank::Three, Suit::Hearts));
+    /// hand.add_card(Card::new(Rank::Four, Suit::Spades));
     ///
     /// let hand_as_vec = hand.as_vec();
     ///

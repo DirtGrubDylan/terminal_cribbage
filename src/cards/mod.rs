@@ -76,8 +76,8 @@
 //! hand.add_card(Card::new(Rank::Two, Suit::Hearts));
 //! hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
 //!
-//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Four, Suit::Spades)));
-//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Ten, Suit::Clubs)));
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Queen, Suit::Diamonds)));
+//! assert_eq!(hand.discard(4), Ok(Card::new(Rank::Two, Suit::Hearts)));
 //! ```
 //!
 //! ## Dealing and Discarding
