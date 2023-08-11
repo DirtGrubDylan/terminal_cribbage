@@ -17,9 +17,9 @@ pub struct Player<C>
 where
     C: Controller,
 {
-    pub controller: C,
-    pub hand: Hand,
-    pub discarded: Vec<Card>,
+    controller: C,
+    hand: Hand,
+    discarded: Vec<Card>,
     pub points: u32,
 }
 
@@ -35,18 +35,9 @@ where
     /// use libterminal_cribbage::cards::{Card, Hand};
     /// use libterminal_cribbage::game::{Player, PredeterminedController};
     ///
-    /// let expected = Player {
-    ///     controller: PredeterminedController::from(vec![0, 1, 2]),
-    ///     hand: Hand::new(),
-    ///     discarded: Vec::new(),
-    ///     points: 0,
-    /// };
-    ///
     /// let controller = PredeterminedController::from(vec![0, 1, 2]);
     ///
-    /// let result = Player::new(controller);
-    ///
-    /// assert_eq!(result, expected);
+    /// let player = Player::new(controller);
     /// ```
     pub fn new(controller: C) -> Player<C> {
         Player {
@@ -92,5 +83,28 @@ where
     /// Adds all the [`Card`]s in [`Player::discarded`] to the [`Player::hand`].
     pub fn gather_discarded(&mut self, card: Card) {
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cards::Hand;
+    use game::PredeterminedController;
+
+    #[test]
+    fn test_new() {
+        let expected = Player {
+            controller: PredeterminedController::from(vec![0, 1, 2]),
+            hand: Hand::new(),
+            discarded: Vec::new(),
+            points: 0,
+        };
+
+        let controller = PredeterminedController::from(vec![0, 1, 2]);
+
+        let result = Player::new(controller);
+
+        assert_eq!(result, expected);
     }
 }

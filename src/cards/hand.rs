@@ -1,7 +1,7 @@
 use std::fmt;
 
-use cards::card::Card;
 use cards::score;
+use cards::Card;
 
 #[cfg(doc)]
 use cards::card::Rank;
@@ -10,7 +10,7 @@ use cards::card::Rank;
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
 #[derive(Debug, PartialEq)]
-pub struct Hand(pub Vec<Card>);
+pub struct Hand(Vec<Card>);
 
 impl Hand {
     /// Constructs a new [`Hand`].
@@ -23,8 +23,6 @@ impl Hand {
     /// use libterminal_cribbage::cards::Hand;
     ///
     /// let hand = Hand::new();
-    ///
-    /// assert!(hand.0.is_empty());
     /// ```
     #[must_use]
     pub fn new() -> Hand {
@@ -52,16 +50,6 @@ impl Hand {
     /// hand.add_card(Card::new(Rank::Queen, Suit::Diamonds));
     /// hand.add_card(Card::new(Rank::Two, Suit::Hearts));
     /// hand.add_card(Card::new(Rank::Ten, Suit::Clubs));
-    ///
-    /// assert_eq!(
-    ///     hand.0,
-    ///     vec![Card::new(Rank::Ace, Suit::Clubs),
-    ///          Card::new(Rank::Two, Suit::Hearts),
-    ///          Card::new(Rank::Two, Suit::Spades),
-    ///          Card::new(Rank::Three, Suit::Hearts),
-    ///          Card::new(Rank::Four, Suit::Spades),
-    ///          Card::new(Rank::Ten, Suit::Clubs),
-    ///          Card::new(Rank::Queen, Suit::Diamonds)]);
     /// ```
     pub fn add_card(&mut self, card: Card) {
         self.0.push(card);
@@ -210,7 +198,7 @@ impl fmt::Display for Hand {
 }
 
 /// Converts a [`Vec<Card>`] to a [`Hand`].
-///    
+///
 /// # Examples
 ///
 /// ```
