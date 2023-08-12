@@ -88,24 +88,6 @@ where
         self.hand.add_card(card);
     }
 
-    /// Add points to a [`Player`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
-    /// use libterminal_cribbage::game::{Player, PredeterminedController};
-    ///
-    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
-    ///
-    /// let mut player = Player::new(controller);
-    ///
-    /// player.add_points(666);
-    /// ```
-    pub fn add_points(&mut self, points: u32) {
-        self.points += points;
-    }
-
     /// Indicates that the [`Player`] has [`Card`]s in [`Player::hand`].
     ///
     /// # Examples
@@ -333,24 +315,6 @@ mod tests {
         let mut player = Player::new(controller);
 
         player.add_card(card);
-
-        assert_eq!(player, expected);
-    }
-
-    #[test]
-    fn test_points() {
-        let expected = Player {
-            controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::new(),
-            discarded: Vec::new(),
-            points: 666,
-        };
-
-        let controller = PredeterminedController::from(vec![0, 1, 2]);
-
-        let mut player = Player::new(controller);
-
-        player.add_points(666);
 
         assert_eq!(player, expected);
     }

@@ -2,8 +2,11 @@
 //!
 //! It's not called pegging because I am immature.
 
-use crate::cards::{Card, Rank, Suit};
-use crate::game::{Controller, Player};
+#[cfg(doc)]
+use cards::{Rank, Suit};
+
+use cards::Card;
+use game::{Controller, Player};
 
 /// Simple struct to keep track of the played stack of [`Card`]s and their running raw total score.
 ///
@@ -205,12 +208,54 @@ impl PlayData {
     /// # Examples
     ///
     /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{PredeterminedController, PlayData, Player};
+    ///
+    /// // Going to discard the Queen for 1 point from a "GO".
+    /// let controller_1 = PredeterminedController::from(vec![0]);
+    /// let player_1_cards = vec![
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    /// let mut player_1 = Player::new_with_cards(controller_1, player_1_cards);
+    ///
+    /// // Going to discard the Queen for 31 points, but won't have a chance after Player 1 plays.
+    /// let controller_2 = PredeterminedController::from(vec![0]);
+    /// // Cannot play at all.
+    /// let player_2_cards = vec![
+    ///     Card::new(Rank::Queen, Suit::Clubs),
+    /// ];
+    /// let mut player_2 = Player::new_with_cards(controller_2, player_2_cards);
+    ///
+    /// let stack = vec![
+    ///     Card::new(Rank::King, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Diamonds),
+    /// ];
+    /// let mut data = PlayData::from(stack);
+    ///
+    /// data.play_once(&mut player_1, &player_2);
+    /// data.play_once(&mut player_2, &player_1);
+    ///
+    /// // Player 1 got 1 points for a GO and has 1 less card in their hand.
+    /// assert_eq!(player_1.points, 1);
+    /// assert!(!player_1.has_cards());
+    /// // Player 2 cannot play after Player 1 not get to play
+    /// assert_eq!(player_2.points, 0);
+    /// assert!(player_2.has_cards());
     /// ```
-    pub fn play_once<C>(&mut self, player: &mut Player<C>)
+    pub fn play_once<C>(&mut self, player: &mut Player<C>, opponent: &Player<C>)
     where
         C: Controller,
     {
-        unimplemented!()
+        if self.can_play(player) {
+            let card_from_players_hand = player.discard().unwrap();
+
+            self.add_card(card_from_players_hand);
+
+            player.points += self.current_points();
+
+            player.points += self.go_point(player, opponent);
+        }
     }
 
     /// Calculates the current points of the stack.
