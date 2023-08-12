@@ -10,7 +10,7 @@ use game::Controller;
 ///
 /// This is strictly used for testing purposes, since AI or user prompts is how card play
 /// is normally determined.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct PredeterminedController {
     /// The indicies for choosing [`Card`]s for a player.
     card_indices: VecDeque<usize>,

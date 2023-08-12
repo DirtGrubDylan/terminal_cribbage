@@ -55,33 +55,140 @@ impl PlayData {
     /// Resets [`PlayData`] if necessary.
     ///
     /// This is only needed if no [`Player`] can play **OR** the stack score is `31`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{PredeterminedController, PlayData, Player};
+    ///
+    /// // Going to discard the Two.
+    /// let controller = PredeterminedController::from(vec![0]);
+    ///
+    /// let player_1_cards = vec![
+    ///     Card::new(Rank::Five, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Spades),
+    /// ];
+    /// let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+    ///
+    /// let player_2_cards = vec![
+    ///     Card::new(Rank::Six, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Diamonds),
+    /// ];
+    /// let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+    ///
+    /// let stack = vec![
+    ///     Card::new(Rank::King, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Hearts),
+    ///     Card::new(Rank::Seven, Suit::Diamonds),
+    /// ];
+    /// let mut data = PlayData::from(stack);
+    ///
+    /// // Stack score isn't 31, but neither player can play.
+    /// data.reset_if_needed(&player_1, &player_2);
+    ///
+    /// assert_eq!(data.stack, Vec::new());
+    /// assert_eq!(data.stack_score, 0);
+    /// ```
     pub fn reset_if_needed<C>(&mut self, player_1: &Player<C>, player_2: &Player<C>)
     where
         C: Controller,
     {
-        unimplemented!()
+        if !self.any_can_play(player_1, player_2) {
+            self.stack = Vec::new();
+            self.stack_score = 0;
+        }
     }
 
     /// Indicates if [`Player`] has a [`Card`] to make a play.
     ///
     /// A play is only possible if the [`Player`] has a [`Card`] whose score summed with the stack
     /// score is less than, or equal to, `31`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{PredeterminedController, PlayData, Player};
+    ///
+    /// // Going to discard the Two.
+    /// let controller = PredeterminedController::from(vec![0]);
+    ///
+    /// let player_cards = vec![
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Spades),
+    /// ];
+    /// let mut player = Player::new_with_cards(controller, player_cards);
+    ///
+    /// let stack = vec![
+    ///     Card::new(Rank::King, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Diamonds),
+    /// ];
+    /// let mut data = PlayData::from(stack);
+    ///
+    /// // Can play either the 2 or the King.
+    /// let could_play_before_discard = data.can_play(&player);
+    ///
+    /// let card_from_player = player.discard().unwrap();
+    ///
+    ///
+    /// data.add_card(card_from_player.clone());
+    ///
+    /// assert_eq!(card_from_player, Card::new(Rank::Two, Suit::Clubs));
+    /// assert!(could_play_before_discard);
+    /// assert!(!data.can_play(&player));
+    /// ```
     pub fn can_play<C>(&self, player: &Player<C>) -> bool
     where
         C: Controller,
     {
-        unimplemented!()
+        let highest_possible_card_score = 31_u32.saturating_sub(self.stack_score);
+
+        player.has_card_with_score_at_most(highest_possible_card_score)
     }
 
     /// Indicates if any [`Player`] has a [`Card`] to make a play.
     ///
     /// A play is only possible if the [`Player`] has a [`Card`] whose score summed with the stack
     /// score is less than, or equal to, `31`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{PredeterminedController, PlayData, Player};
+    ///
+    /// // Going to discard the Two.
+    /// let controller = PredeterminedController::from(vec![0]);
+    ///
+    /// let player_1_cards = vec![
+    ///     Card::new(Rank::Five, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Spades),
+    /// ];
+    /// let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+    ///
+    /// let player_2_cards = vec![
+    ///     Card::new(Rank::Six, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Diamonds),
+    /// ];
+    /// let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+    ///
+    /// let stack = vec![
+    ///     Card::new(Rank::King, Suit::Clubs),
+    ///     Card::new(Rank::King, Suit::Hearts),
+    ///     Card::new(Rank::Seven, Suit::Diamonds),
+    /// ];
+    /// let data = PlayData::from(stack);
+    ///
+    /// // Stack score isn't 31, but neither player can play.
+    /// assert!(!data.any_can_play(&player_1, &player_2));
+    /// ```
     pub fn any_can_play<C>(&self, player_1: &Player<C>, player_2: &Player<C>) -> bool
     where
         C: Controller,
     {
-        unimplemented!()
+        self.can_play(player_1) || self.can_play(player_2)
     }
 
     /// Plays a single round of play for a [`Player`].
@@ -94,22 +201,15 @@ impl PlayData {
     ///    * Using [`PlayData::current_points`].
     ///
     /// If the [`Player`] cannot play, they GO (pass their turn).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// ```
     pub fn play_once<C>(&mut self, player: &mut Player<C>)
     where
         C: Controller,
     {
-        unimplemented!()
-    }
-
-    /// Returns `0` or `1` if neither [`Player`] can play.
-    ///
-    /// It's important to note, this is calculated **AFTER** a [`Player`] has played. Thus, the GO
-    /// point is added to that [`Player`].
-    ///
-    /// Uses [`PlayData::any_can_play`].
-    ///
-    /// Maybe move this outside of the publc points?
-    pub fn go_point(&self) -> u32 {
         unimplemented!()
     }
 
@@ -134,8 +234,30 @@ impl PlayData {
     /// * 31 (stack score is `31`) - 2pts
     /// * Go (played last card) - 1pt
     /// * Flushes and Nobs count do not count.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// ```
     pub fn current_points(&self) -> u32 {
         unimplemented!()
+    }
+
+    /// Returns `0` or `1` if neither [`Player`] can play.
+    ///
+    /// It's important to note, this is calculated **AFTER** a [`Player`] has played. Thus, the GO
+    /// point is added to that [`Player`].
+    ///
+    /// Uses [`PlayData::any_can_play`].
+    fn go_point<C>(&self, player_1: &Player<C>, player_2: &Player<C>) -> u32
+    where
+        C: Controller,
+    {
+        if !self.any_can_play(player_1, player_2) {
+            1
+        } else {
+            0
+        }
     }
 
     /// Counts the largest sequential run from the [`Card`] at the top of the stack
@@ -275,7 +397,27 @@ impl PlayData {
     ///     * player 2 does a three-of-a-kind and gets 6pts
     ///     * player 1 does a four-of-a-kind and gets 12pts
     fn pairs_points(&self) -> u32 {
-        unimplemented!()
+        if self.stack.len() < 2 {
+            return 0;
+        }
+
+        let mut matching_ranks = 0;
+        let top_card_rank = self.stack.last().unwrap().rank;
+
+        for card in self.stack.iter().rev().take(4).skip(1) {
+            if card.rank == top_card_rank {
+                matching_ranks += 1;
+            } else {
+                break;
+            }
+        }
+
+        match matching_ranks {
+            3 => 12,
+            2 => 6,
+            1 => 2,
+            _ => 0,
+        }
     }
 }
 
@@ -315,7 +457,10 @@ impl From<Vec<Card>> for PlayData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cards::{Card, Rank, Suit};
+    use crate::{
+        cards::{Card, Rank, Suit},
+        game::PredeterminedController,
+    };
 
     #[test]
     fn test_can_make_run_of_index_diff_false() {
@@ -629,32 +774,184 @@ mod tests {
     }
 
     #[test]
+    fn test_pairs_points_stack_too_small_0() {
+        let cards = vec![Card::new(Rank::King, Suit::Clubs)];
+
+        let data = PlayData::from(cards);
+
+        let result = data.pairs_points();
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
     fn test_pairs_points_0() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Spades),
+            Card::new(Rank::Ace, Suit::Spades),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.pairs_points();
+
+        assert_eq!(result, 0);
     }
 
     #[test]
     fn test_pairs_points_2() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.pairs_points();
+
+        assert_eq!(result, 2);
     }
 
     #[test]
     fn test_pairs_points_6() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Spades),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.pairs_points();
+
+        assert_eq!(result, 6);
     }
 
     #[test]
     fn test_pairs_points_12() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Spades),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.pairs_points();
+
+        assert_eq!(result, 12);
     }
 
     #[test]
-    fn test_go_point_0() {
-        unimplemented!()
+    fn test_go_point_player_1_can_play_0() {
+        let controller = PredeterminedController::from(vec![]);
+
+        let player_1_cards = vec![Card::new(Rank::Ace, Suit::Clubs)];
+        let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+
+        let player_2_cards = Vec::new();
+        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+
+        let stack = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.go_point(&player_1, &player_2);
+
+        assert_eq!(result, 0);
     }
 
     #[test]
-    fn test_go_point_1() {
-        unimplemented!()
+    fn test_go_point_player_2_can_play_0() {
+        let controller = PredeterminedController::from(vec![]);
+
+        let player_1_cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::King, Suit::Spades),
+        ];
+        let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+
+        let player_2_cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+
+        let stack = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.go_point(&player_1, &player_2);
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_go_point_neither_can_play_stack_score_thirty_one_1() {
+        let controller = PredeterminedController::from(vec![]);
+
+        let player_1_cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::King, Suit::Spades),
+        ];
+        let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+
+        let player_2_cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+
+        let stack = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Ace, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.go_point(&player_1, &player_2);
+
+        assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn test_go_point_neither_player_can_play_stack_score_thirty_1() {
+        let controller = PredeterminedController::from(vec![]);
+
+        let player_1_cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::King, Suit::Spades),
+        ];
+        let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+
+        let player_2_cards = vec![
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+
+        let stack = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.go_point(&player_1, &player_2);
+
+        assert_eq!(result, 1);
     }
 }
