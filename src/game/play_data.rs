@@ -2,10 +2,7 @@
 //!
 //! It's not called pegging because I am immature.
 
-#[cfg(doc)]
-use crate::cards::Rank;
-
-use crate::cards::Card;
+use crate::cards::{Card, Rank, Suit};
 use crate::game::{Controller, Player};
 
 /// Simple struct to keep track of the played stack of [`Card`]s and their running raw total score.
@@ -151,8 +148,106 @@ impl PlayData {
     ///     * player 1 does a 3 card run and gets 3pts
     ///     * player 2 does a 4 card run and gets 4pts
     ///     * player 1 does a 5 card run and gets 5pts
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is a [`Rank`] variant who's enum value is greater than `12`.
     fn largest_run_points(&self) -> u32 {
-        unimplemented!()
+        if self.stack.len() < 3 {
+            return 0;
+        }
+
+        // This is a way to keep track of which ranks we have found using the enum to usize
+        // conversion.
+        // Rank::Ace is mapped to index 0 and Rank::King is mapped to index 12
+        let mut seven_run = [0; 13];
+        let mut six_run = [0; 13];
+        let mut five_run = [0; 13];
+        let mut four_run = [0; 13];
+        let mut three_run = [0; 13];
+
+        let top_card_index = self.stack.len() - 1;
+        let top_card = self.stack.last().unwrap();
+
+        for (index, card) in self.stack.iter().enumerate() {
+            if Self::can_make_run_of(index, card, top_card_index, top_card, /*run_size=*/ 7) {
+                Self::add_rank_to_array(&mut seven_run, card);
+            }
+
+            if Self::can_make_run_of(index, card, top_card_index, top_card, /*run_size=*/ 6) {
+                Self::add_rank_to_array(&mut six_run, card);
+            }
+
+            if Self::can_make_run_of(index, card, top_card_index, top_card, /*run_size=*/ 5) {
+                Self::add_rank_to_array(&mut five_run, card);
+            }
+
+            if Self::can_make_run_of(index, card, top_card_index, top_card, /*run_size=*/ 4) {
+                Self::add_rank_to_array(&mut four_run, card);
+            }
+
+            if Self::can_make_run_of(index, card, top_card_index, top_card, /*run_size=*/ 3) {
+                Self::add_rank_to_array(&mut three_run, card);
+            }
+        }
+
+        if Self::is_run_of(&seven_run, 7) {
+            7
+        } else if Self::is_run_of(&six_run, 6) {
+            6
+        } else if Self::is_run_of(&five_run, 5) {
+            5
+        } else if Self::is_run_of(&four_run, 4) {
+            4
+        } else if Self::is_run_of(&three_run, 3) {
+            3
+        } else {
+            0
+        }
+    }
+
+    /// Helper method for [`largest_run_points`] to check if a card can be in run of given size.
+    fn can_make_run_of(
+        card_index: usize,
+        card: &Card,
+        last_card_index: usize,
+        last_card: &Card,
+        run_size: usize,
+    ) -> bool {
+        let card_rank_value = card.rank as usize;
+        let last_card_rank_value = last_card.rank as usize;
+
+        let index_diff = last_card_index.abs_diff(card_index);
+        let rank_value_diff = last_card_rank_value.abs_diff(card_rank_value);
+
+        (index_diff < run_size) && (rank_value_diff < run_size)
+    }
+
+    /// Helper method for [`largest_run_points`] to check if an array can score the given points.
+    fn is_run_of(rank_array: &[u32], points: u32) -> bool {
+        let mut current_run = 0;
+
+        for rank_count in rank_array {
+            if 0 < *rank_count {
+                current_run += 1;
+            } else if 0 < current_run {
+                break;
+            }
+        }
+
+        current_run == points
+    }
+
+    /// Helper method for [`largest_run_points`] to add [`Card`] [`Rank`] to counting array.
+    ///
+    /// # Panics
+    ///
+    /// Panics if there is a [`Rank`] variant who's enum value is greater than `12`.
+    fn add_rank_to_array(rank_array: &mut [u32], card: &Card) {
+        match rank_array.get_mut(card.rank as usize) {
+            Some(count) => *count += 1,
+            None => panic!("Rank {:?} not handled", card.rank),
+        }
     }
 
     /// Returns `0` or `2` if the stack score is `15`.
@@ -211,39 +306,262 @@ impl From<Vec<Card>> for PlayData {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::cards::{Card, Rank, Suit};
+
     #[test]
-    fn test_largest_run_points_0() {
-        unimplemented!()
+    fn test_can_make_run_of_index_diff_false() {
+        let run_size = 4;
+        let last_card_index = 6;
+        let last_card = Card::new(Rank::Two, Suit::Clubs);
+        let card_index = 2;
+        let card = Card::new(Rank::Five, Suit::Clubs);
+
+        assert!(!PlayData::can_make_run_of(
+            card_index,
+            &card,
+            last_card_index,
+            &last_card,
+            run_size
+        ));
+    }
+
+    #[test]
+    fn test_can_make_run_of_rank_diff_false() {
+        let run_size = 4;
+        let last_card_index = 6;
+        let last_card = Card::new(Rank::Two, Suit::Clubs);
+        let card_index = 3;
+        let card = Card::new(Rank::Six, Suit::Clubs);
+
+        assert!(!PlayData::can_make_run_of(
+            card_index,
+            &card,
+            last_card_index,
+            &last_card,
+            run_size
+        ));
+    }
+
+    #[test]
+    fn test_can_make_run_of_true() {
+        let run_size = 3;
+        let last_card_index = 7;
+        let last_card = Card::new(Rank::Ace, Suit::Clubs);
+        let card_index = 5;
+        let card = Card::new(Rank::Three, Suit::Clubs);
+
+        assert!(PlayData::can_make_run_of(
+            card_index,
+            &card,
+            last_card_index,
+            &last_card,
+            run_size
+        ));
+    }
+
+    #[test]
+    fn test_can_make_run_of_larger_run_than_diffs_true() {
+        let run_size = 7;
+        let last_card_index = 7;
+        let last_card = Card::new(Rank::Ace, Suit::Clubs);
+        let card_index = 5;
+        let card = Card::new(Rank::Three, Suit::Clubs);
+
+        assert!(PlayData::can_make_run_of(
+            card_index,
+            &card,
+            last_card_index,
+            &last_card,
+            run_size
+        ));
+    }
+
+    #[test]
+    fn test_is_run_of_has_gaps_no_multiple_false() {
+        let points = 7;
+        let run = [0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0];
+
+        assert!(!PlayData::is_run_of(&run, points));
+    }
+
+    #[test]
+    fn test_is_run_of_no_gaps_has_multiple_false() {
+        let points = 7;
+        let run = [1, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        assert!(!PlayData::is_run_of(&run, points));
+    }
+
+    #[test]
+    fn test_is_run_of_no_gap_no_multiple_run_too_small_false() {
+        let points = 4;
+        let run = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        assert!(!PlayData::is_run_of(&run, points));
+    }
+
+    #[test]
+    fn test_is_run_of_true() {
+        let points = 3;
+        let run = [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        assert!(PlayData::is_run_of(&run, points));
+    }
+
+    #[test]
+    fn test_largest_run_points_stack_too_small_0() {
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_largest_run_points_top_of_stack_not_run_0() {
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_largest_run_points_top_of_stack_not_run_long_0() {
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 0);
     }
 
     #[test]
     fn test_largest_run_points_3() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 3);
     }
 
     #[test]
-    fn test_largest_run_points_3_with_break_in_middle() {
-        unimplemented!()
+    fn test_largest_run_points_with_break_in_middle_3() {
+        let cards = vec![
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Hearts),
+            Card::new(Rank::Ace, Suit::Hearts),
+            Card::new(Rank::Two, Suit::Hearts),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 3);
     }
 
     #[test]
     fn test_largest_run_points_4() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 4);
     }
 
     #[test]
     fn test_largest_run_points_5() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 5);
     }
 
     #[test]
     fn test_largest_run_points_6() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 6);
     }
 
     #[test]
     fn test_largest_run_points_7() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Clubs),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.largest_run_points();
+
+        assert_eq!(result, 7);
     }
 
     #[test]
