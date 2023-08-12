@@ -252,12 +252,20 @@ impl PlayData {
 
     /// Returns `0` or `2` if the stack score is `15`.
     fn fifteen_points(&self) -> u32 {
-        unimplemented!()
+        if self.stack_score == 15 {
+            2
+        } else {
+            0
+        }
     }
 
     /// Returns `0` or `2` if the stack score is `31`.
     fn thirty_one_points(&self) -> u32 {
-        unimplemented!()
+        if self.stack_score == 31 {
+            2
+        } else {
+            0
+        }
     }
 
     /// Returns `0`, `2`, `6`, or `12` depending on the [`Rank`] matching of the top 2-4 [`Card`]s.
@@ -566,22 +574,58 @@ mod tests {
 
     #[test]
     fn test_fifteen_points_0() {
-        unimplemented!()
+        let cards = vec![Card::new(Rank::King, Suit::Clubs)];
+
+        let data = PlayData::from(cards);
+
+        let result = data.fifteen_points();
+
+        assert_eq!(result, 0);
     }
 
     #[test]
     fn test_fifteen_points_2() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Hearts),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.fifteen_points();
+
+        assert_eq!(result, 2);
     }
 
     #[test]
     fn test_thirty_one_points_0() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Spades),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.thirty_one_points();
+
+        assert_eq!(result, 0);
     }
 
     #[test]
     fn test_thirty_one_points_2() {
-        unimplemented!()
+        let cards = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::King, Suit::Spades),
+            Card::new(Rank::Ace, Suit::Spades),
+        ];
+
+        let data = PlayData::from(cards);
+
+        let result = data.thirty_one_points();
+
+        assert_eq!(result, 2);
     }
 
     #[test]
