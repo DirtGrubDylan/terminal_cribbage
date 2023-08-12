@@ -232,15 +232,13 @@ impl PlayData {
     ///     * player 1 does a four-of-a-kind and gets 12pts
     /// * 15 (stack score is `15`) - 2pts
     /// * 31 (stack score is `31`) - 2pts
-    /// * Go (played last card) - 1pt
+    /// * Go (played last card) (not counted here) - 1pt
     /// * Flushes and Nobs count do not count.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// ```
-    pub fn current_points(&self) -> u32 {
-        unimplemented!()
+    fn current_points(&self) -> u32 {
+        self.largest_run_points()
+            + self.pairs_points()
+            + self.fifteen_points()
+            + self.thirty_one_points()
     }
 
     /// Returns `0` or `1` if neither [`Player`] can play.
@@ -253,7 +251,7 @@ impl PlayData {
     where
         C: Controller,
     {
-        if !self.any_can_play(player_1, player_2) {
+        if !self.any_can_play(player_1, player_2) && (self.stack_score != 31) {
             1
         } else {
             0
@@ -899,7 +897,7 @@ mod tests {
     }
 
     #[test]
-    fn test_go_point_neither_can_play_stack_score_thirty_one_1() {
+    fn test_go_point_neither_can_play_stack_score_thirty_one_0() {
         let controller = PredeterminedController::from(vec![]);
 
         let player_1_cards = vec![
@@ -924,7 +922,7 @@ mod tests {
 
         let result = data.go_point(&player_1, &player_2);
 
-        assert_eq!(result, 1);
+        assert_eq!(result, 0);
     }
 
     #[test]
@@ -953,5 +951,52 @@ mod tests {
         let result = data.go_point(&player_1, &player_2);
 
         assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn test_current_points_0() {
+        let stack = vec![
+            Card::new(Rank::Four, Suit::Hearts),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.current_points();
+
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_current_points_pair_and_fifteen_4() {
+        let stack = vec![
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Hearts),
+            Card::new(Rank::Four, Suit::Diamonds),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.current_points();
+
+        assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn test_current_points_three_of_a_kind_and_thirty_one_8() {
+        let stack = vec![
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::King, Suit::Hearts),
+            Card::new(Rank::Eight, Suit::Hearts),
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Hearts),
+        ];
+        let data = PlayData::from(stack);
+
+        let result = data.current_points();
+
+        assert_eq!(result, 8);
     }
 }
