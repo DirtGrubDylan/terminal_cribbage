@@ -88,24 +88,6 @@ where
         self.hand.add_card(card);
     }
 
-    /// Add points to a [`Player`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
-    /// use libterminal_cribbage::game::{Player, PredeterminedController};
-    ///
-    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
-    ///
-    /// let mut player = Player::new(controller);
-    ///
-    /// player.add_points(666);
-    /// ```
-    pub fn add_points(&mut self, points: u32) {
-        self.points += points;
-    }
-
     /// Indicates that the [`Player`] has [`Card`]s in [`Player::hand`].
     ///
     /// # Examples
@@ -245,6 +227,31 @@ where
         self.hand = Hand::from(self.discarded.clone());
         self.discarded = Vec::new();
     }
+
+    /// Indicats if [`Player`] has a [`Card`] whose [`Card::score`] is less than the given value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let card = Card::new(Rank::Six, Suit::Spades);
+    ///
+    /// let controller = PredeterminedController::from(vec![0]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
+    /// player.add_card(card);
+    ///
+    /// assert!(!player.has_card_with_score_at_most(5));
+    /// assert!(player.has_card_with_score_at_most(6));
+    /// assert!(player.has_card_with_score_at_most(7));
+    /// ```
+    #[must_use]
+    pub fn has_card_with_score_at_most(&self, value: u32) -> bool {
+        self.hand.as_vec().iter().any(|card| card.score() <= value)
+    }
 }
 
 #[cfg(test)]
@@ -308,24 +315,6 @@ mod tests {
         let mut player = Player::new(controller);
 
         player.add_card(card);
-
-        assert_eq!(player, expected);
-    }
-
-    #[test]
-    fn test_points() {
-        let expected = Player {
-            controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::new(),
-            discarded: Vec::new(),
-            points: 666,
-        };
-
-        let controller = PredeterminedController::from(vec![0, 1, 2]);
-
-        let mut player = Player::new(controller);
-
-        player.add_points(666);
 
         assert_eq!(player, expected);
     }

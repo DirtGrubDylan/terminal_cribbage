@@ -239,10 +239,10 @@ impl fmt::Display for Hand {
 /// assert_eq!(hand_as_vec, &cards);
 /// ```
 impl From<Vec<Card>> for Hand {
-    fn from(cards: Vec<Card>) -> Self {
+    fn from(input: Vec<Card>) -> Self {
         let mut hand = Hand::new();
 
-        for card in cards {
+        for card in input {
             hand.add_card(card);
         }
 
