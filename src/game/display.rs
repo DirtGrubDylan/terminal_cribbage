@@ -172,6 +172,10 @@ impl Display {
         result.push(format!("Starter: {}", Self::card_string(starter)));
         result.push(format!("Player Hand: {}", player.hand));
 
+        if player.has_crib() {
+            result.push(format!("Player Crib: {}", player.crib));
+        }
+
         result.push(Self::spacer());
 
         result.join(&self.joiner)
@@ -305,21 +309,19 @@ mod tests {
         let starter = Card::new(Rank::Four, Suit::Diamonds);
         let controller = PredeterminedController::from(vec![]);
 
-        let player_1_cards = vec![
+        let hand = vec![
             Card::new(Rank::Eight, Suit::Spades),
             Card::new(Rank::King, Suit::Clubs),
             Card::new(Rank::Two, Suit::Spades),
             Card::new(Rank::Six, Suit::Diamonds),
-            Card::new(Rank::Five, Suit::Diamonds),
-            Card::new(Rank::Five, Suit::Clubs),
         ];
-        let player_1_crib = vec![
+        let crib = vec![
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Five, Suit::Diamonds),
             Card::new(Rank::Five, Suit::Clubs),
         ];
-        let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
+        let player_1 = Player::new_with_cards_and_crib(controller.clone(), hand, crib);
 
         let player_2 = Player::new(controller.clone());
 
