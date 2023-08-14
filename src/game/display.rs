@@ -125,13 +125,13 @@ use crate::game::{Controller, PlayData, Player};
 ///
 /// Player has crib and starter card is flipped, hand and crib are counted.
 /// *************************************
-/// Player Points: 8 | Opponent Points: 3
+/// Player Points: j | Opponent Points: 3
 /// Starter: [4♦]
-/// Player Hand: [8♠],[K♣],[2♠],[6♦]
-/// Player Crib: [A♣],[2♣],[3♣],[4♣]
-/// Oppenent Hand: [2♠],[Q♣],[3♠],[K♦]
-/// Opponenet hand score: 4
-/// Hand score: 0
+/// Player Hand: [8♠],[K♣],[A♠],[6♦]
+/// Player Crib: [A♣],[2♣],[5♦],[5♣]
+/// Opponenet Hand: [8♦],[K♦],[6♣],[8♣]
+/// Opponenet hand score: 2
+/// Hand score: 4
 /// Crib score: 4
 /// *************************************
 ///
@@ -243,7 +243,55 @@ impl Display {
     where
         C: Controller,
     {
-        unimplemented!()
+        let mut result = Vec::new();
+
+        result.push(Self::spacer());
+
+        result.push(format!(
+            "Player Points: {} | Opponent Points: {}",
+            player.points, opponent.points
+        ));
+        result.push(format!("Starter: {starter}"));
+
+        result.push(format!("Player Hand: {}", player.hand));
+
+        if player.has_crib() {
+            result.push(format!("Player Crib: {}", player.crib));
+        }
+
+        result.push(format!("Opponent Hand: {}", opponent.hand));
+
+        if opponent.has_crib() {
+            result.push(format!("Opponent Crib: {}", opponent.crib));
+        }
+
+        result.push(format!(
+            "Opponent Hand Score: {}",
+            opponent.hand.total(starter, /*is_crib=*/ false)
+        ));
+
+        if opponent.has_crib() {
+            result.push(format!(
+                "Opponent Crib Score: {}",
+                opponent.crib.total(starter, /*is_crib=*/ true)
+            ));
+        }
+
+        result.push(format!(
+            "Hand Score: {}",
+            player.hand.total(starter, /*is_crib=*/ false)
+        ));
+
+        if player.has_crib() {
+            result.push(format!(
+                "Crib Score: {}",
+                player.crib.total(starter, /*is_crib=*/ true)
+            ));
+        }
+
+        result.push(Self::spacer());
+
+        result.join(&self.joiner)
     }
 
     /// The display [`String`] representation of a [`Option<&Card>`].
@@ -399,9 +447,7 @@ mod tests {
         ];
         let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
 
-        let stack = vec![
-            Card::new(Rank::Ace, Suit::Diamonds),
-        ];
+        let stack = vec![Card::new(Rank::Ace, Suit::Diamonds)];
         let mut play_data = PlayData::from(stack);
 
         play_data.play_once(&mut player_2, &player_1);
@@ -444,9 +490,7 @@ mod tests {
         ];
         let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
 
-        let stack = vec![
-            Card::new(Rank::Ace, Suit::Diamonds),
-        ];
+        let stack = vec![Card::new(Rank::Ace, Suit::Diamonds)];
         let mut play_data = PlayData::from(stack);
 
         play_data.play_once(&mut player_2, &player_1);
@@ -462,6 +506,101 @@ mod tests {
             + "******************************************";
 
         let result = display.game_during_play_to_string(&starter, &player_1, &player_2, &play_data);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_game_during_counting_to_string_with_crib() {
+        let display = Display::new();
+
+        let starter = Card::new(Rank::Four, Suit::Diamonds);
+        let controller = PredeterminedController::from(vec![3]);
+
+        let player_1_hand = vec![
+            Card::new(Rank::Eight, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Diamonds),
+        ];
+        let crib = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+        ];
+        let player_1 = Player::new_with_cards_and_crib(controller.clone(), player_1_hand, crib);
+
+        let player_2_hand = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Points: 0 | Opponent Points: 0\n"
+            + "Starter: [4♦]\n"
+            + "Player Hand: [ [8♠],[K♣],[A♦],[6♦] ]\n"
+            + "Player Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
+            + "Opponent Hand: [ [8♦],[K♦],[6♣],[8♣] ]\n"
+            + "Opponent Hand Score: 2\n"
+            + "Hand Score: 4\n"
+            + "Crib Score: 4\n"
+            + "******************************************";
+
+        let result = display.game_during_counting_to_string(&starter, &player_1, &player_2);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_game_during_counting_to_string_opponent_crib() {
+        let display = Display::new();
+
+        let starter = Card::new(Rank::Four, Suit::Diamonds);
+        let controller = PredeterminedController::from(vec![3]);
+
+        let player_1_hand = vec![
+            Card::new(Rank::Eight, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Diamonds),
+        ];
+        let mut player_1 = Player::new_with_cards(controller.clone(), player_1_hand);
+
+        let player_2_hand = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let crib = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+        ];
+        let mut player_2 = Player::new_with_cards_and_crib(controller.clone(), player_2_hand, crib);
+
+        player_1.points += 8;
+        player_2.points += 2;
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Points: 8 | Opponent Points: 2\n"
+            + "Starter: [4♦]\n"
+            + "Player Hand: [ [8♠],[K♣],[A♦],[6♦] ]\n"
+            + "Opponent Hand: [ [8♦],[K♦],[6♣],[8♣] ]\n"
+            + "Opponent Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
+            + "Opponent Hand Score: 2\n"
+            + "Opponent Crib Score: 4\n"
+            + "Hand Score: 4\n"
+            + "******************************************";
+
+        let result = display.game_during_counting_to_string(&starter, &player_1, &player_2);
 
         assert_eq!(result, expected);
     }
