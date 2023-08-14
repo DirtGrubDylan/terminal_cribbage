@@ -8,7 +8,7 @@ use cards::{Card, Rank, Suit};
 /// The [`Deck`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual deck of [`Card`]s
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Deck(Vec<Card>);
 
 impl Deck {

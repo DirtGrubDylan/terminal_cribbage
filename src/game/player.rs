@@ -15,7 +15,7 @@ use game::Controller;
 /// during play.
 ///
 /// Points is self explainitory.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Player<C>
 where
     C: Controller,
@@ -193,16 +193,14 @@ where
     /// ```
     #[must_use]
     pub fn choose_card_for_cut(&mut self, deck: &mut Deck) -> Option<Card> {
-        let possible_card = self
-            .controller
+        // Handle stdin here. Only print input if not using stdin.
+        // Maybe Controller has a method `uses_stdin`?
+        // Also, put this into Player
+        // print!("Choose Card to Cut from Hand (0 to 51): ");
+
+        self.controller
             .get_card_index(deck.as_vec())
-            .map(|index| deck.remove(index).unwrap());
-
-        if let Some(card) = possible_card.clone() {
-            self.discarded.push(card);
-        }
-
-        possible_card
+            .map(|index| deck.remove(index).unwrap())
     }
 
     /// Discards, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
@@ -289,7 +287,6 @@ where
     pub fn last_discarded(&self) -> Option<&Card> {
         self.discarded.last()
     }
-
 
     /// Removes, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
     ///
@@ -407,7 +404,11 @@ where
     C: Controller,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let discarded_str_joined = self.discarded.iter().map(std::string::ToString::to_string).join(",");
+        let discarded_str_joined = self
+            .discarded
+            .iter()
+            .map(std::string::ToString::to_string)
+            .join(",");
 
         write!(
             f,

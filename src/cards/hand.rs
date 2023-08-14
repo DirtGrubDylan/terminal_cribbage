@@ -10,7 +10,7 @@ use cards::card::Rank;
 /// The [`Hand`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Hand(Vec<Card>);
 
 impl Hand {
