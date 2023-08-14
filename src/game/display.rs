@@ -141,6 +141,7 @@ pub struct Display {
 
 impl Display {
     /// Creates a new [`Display`] struct.
+    #[must_use]
     pub fn new() -> Display {
         Display {
             joiner: String::from("\n"),
@@ -214,17 +215,17 @@ impl Display {
 
         let opponent_last_played = opponent
             .last_discarded()
-            .map_or(String::new(), |card| card.to_string());
+            .map_or(String::new(), std::string::ToString::to_string);
 
-        result.push(format!("Opponent Last Played: {}", opponent_last_played));
+        result.push(format!("Opponent Last Played: {opponent_last_played}"));
 
         let play_stack_str = play_data
             .stack
             .iter()
-            .map(|card| card.to_string())
+            .map(std::string::ToString::to_string)
             .join(",");
 
-        result.push(format!("Play Stack: [ {} ]", play_stack_str));
+        result.push(format!("Play Stack: [ {play_stack_str} ]"));
 
         result.push(Self::spacer());
 
@@ -338,7 +339,7 @@ mod tests {
         ];
         let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
 
-        let player_2 = Player::new(controller.clone());
+        let player_2 = Player::new(controller);
 
         let expected = String::new()
             + "******************************************\n"
@@ -369,7 +370,7 @@ mod tests {
         ];
         let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
 
-        let player_2 = Player::new(controller.clone());
+        let player_2 = Player::new(controller);
 
         let expected = String::new()
             + "******************************************\n"
@@ -404,7 +405,7 @@ mod tests {
         ];
         let player_1 = Player::new_with_cards_and_crib(controller.clone(), hand, crib);
 
-        let player_2 = Player::new(controller.clone());
+        let player_2 = Player::new(controller);
 
         let expected = String::new()
             + "******************************************\n"
@@ -445,7 +446,7 @@ mod tests {
             Card::new(Rank::Six, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+        let mut player_2 = Player::new_with_cards(controller, player_2_hand);
 
         let stack = vec![Card::new(Rank::Ace, Suit::Diamonds)];
         let mut play_data = PlayData::from(stack);
@@ -488,7 +489,7 @@ mod tests {
             Card::new(Rank::Six, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+        let mut player_2 = Player::new_with_cards(controller, player_2_hand);
 
         let stack = vec![Card::new(Rank::Ace, Suit::Diamonds)];
         let mut play_data = PlayData::from(stack);
@@ -537,7 +538,7 @@ mod tests {
             Card::new(Rank::Six, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+        let player_2 = Player::new_with_cards(controller, player_2_hand);
 
         let expected = String::new()
             + "******************************************\n"
@@ -583,7 +584,7 @@ mod tests {
             Card::new(Rank::Five, Suit::Diamonds),
             Card::new(Rank::Five, Suit::Clubs),
         ];
-        let mut player_2 = Player::new_with_cards_and_crib(controller.clone(), player_2_hand, crib);
+        let mut player_2 = Player::new_with_cards_and_crib(controller, player_2_hand, crib);
 
         player_1.points += 8;
         player_2.points += 2;

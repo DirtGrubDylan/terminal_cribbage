@@ -234,7 +234,7 @@ impl Default for Hand {
 
 impl fmt::Display for Hand {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let cards_str_joined = self.0.iter().map(|card| card.to_string()).join(",");
+        let cards_str_joined = self.0.iter().map(std::string::ToString::to_string).join(",");
 
         write!(formatter, "[ {cards_str_joined} ]")
     }

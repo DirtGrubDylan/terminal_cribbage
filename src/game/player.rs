@@ -407,7 +407,7 @@ where
     C: Controller,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let discarded_str_joined = self.discarded.iter().map(|card| card.to_string()).join(",");
+        let discarded_str_joined = self.discarded.iter().map(std::string::ToString::to_string).join(",");
 
         write!(
             f,
@@ -481,7 +481,7 @@ mod tests {
 
         let controller = PredeterminedController::from(vec![0, 1, 2]);
 
-        let result = Player::new_with_cards_and_crib(controller, cards.clone(), cards.clone());
+        let result = Player::new_with_cards_and_crib(controller, cards.clone(), cards);
 
         assert_eq!(result, expected);
     }
@@ -559,7 +559,7 @@ mod tests {
 
         let mut player = Player::new(controller);
 
-        player.add_card(card.clone());
+        player.add_card(card);
 
         let _ = player.discard();
     }

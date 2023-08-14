@@ -129,6 +129,7 @@ impl Deck {
     ///
     /// let deck_vec = deck.as_vec();
     /// ```
+    #[must_use]
     pub fn as_vec(&self) -> &Vec<Card> {
         &self.0
     }
@@ -142,7 +143,7 @@ impl Default for Deck {
 
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let cards_str_joined = self.0.iter().map(|card| card.to_string()).join(",");
+        let cards_str_joined = self.0.iter().map(std::string::ToString::to_string).join(",");
 
         write!(formatter, "[ {cards_str_joined} ]")
     }
