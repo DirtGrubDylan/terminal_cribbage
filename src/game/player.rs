@@ -21,8 +21,8 @@ where
     C: Controller,
 {
     controller: C,
-    hand: Hand,
     discarded: Vec<Card>,
+    pub hand: Hand,
     pub points: u32,
 }
 
@@ -44,8 +44,8 @@ where
     pub fn new(controller: C) -> Player<C> {
         Player {
             controller,
-            hand: Hand::new(),
             discarded: Vec::new(),
+            hand: Hand::new(),
             points: 0,
         }
     }
