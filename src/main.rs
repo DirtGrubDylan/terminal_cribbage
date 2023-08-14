@@ -83,7 +83,7 @@ fn get_something_auto() -> String {
 fn get_something() -> String {
     let mut input = String::new();
 
-    io::stdin().read_line(&mut input);
+    let _ = io::stdin().read_line(&mut input);
 
     input.trim().to_string()
 }
