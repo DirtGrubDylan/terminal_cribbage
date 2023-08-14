@@ -449,8 +449,6 @@ mod tests {
         ];
         let mut play_data = PlayData::from(stack);
 
-        println!("{:?}", play_data);
-
         play_data.play_once(&mut player_2, &player_1);
 
         let expected = String::new()
