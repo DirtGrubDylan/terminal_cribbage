@@ -19,7 +19,16 @@ pub struct PlayData {
 }
 
 impl PlayData {
-    /// Creates a new [`PlayData`] with an empty stack and a `0` stack_score.
+    /// Creates a new [`PlayData`] with an empty stack and a `0` stack score.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::game::PlayData;
+    ///
+    /// let data = PlayData::new();
+    /// ```
+    #[must_use]
     pub fn new() -> PlayData {
         PlayData {
             stack: Vec::new(),
@@ -205,6 +214,12 @@ impl PlayData {
     ///
     /// If the [`Player`] cannot play, they GO (pass their turn).
     ///
+    /// # Panics
+    ///
+    /// * If the index at the front of [`Player::controller`] returns an index that is out of bounds
+    /// for the [`Player::hand`].
+    /// * If there is a [`Rank`] variant who's enum value is greater than `12`.
+    ///
     /// # Examples
     ///
     /// ```
@@ -279,6 +294,10 @@ impl PlayData {
     /// * 31 (stack score is `31`) - 2pts
     /// * Go (played last card) (not counted here) - 1pt
     /// * Flushes and Nobs count do not count.
+    ///
+    /// # Panics
+    ///
+    /// If there is a [`Rank`] variant who's enum value is greater than `12`.
     fn current_points(&self) -> u32 {
         self.largest_run_points()
             + self.pairs_points()
@@ -292,15 +311,15 @@ impl PlayData {
     /// point is added to that [`Player`].
     ///
     /// Uses [`PlayData::any_can_play`].
+    ///
+    /// # Panics
+    ///
+    /// If, for some reason, a [`bool`] cannot be converted to a [`u32`].
     fn go_point<C>(&self, player_1: &Player<C>, player_2: &Player<C>) -> u32
     where
         C: Controller,
     {
-        if !self.any_can_play(player_1, player_2) && (self.stack_score != 31) {
-            1
-        } else {
-            0
-        }
+        u32::from(!self.any_can_play(player_1, player_2) && (self.stack_score != 31))
     }
 
     /// Counts the largest sequential run from the [`Card`] at the top of the stack
@@ -464,6 +483,12 @@ impl PlayData {
     }
 }
 
+impl Default for PlayData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl From<Vec<Card>> for PlayData {
     /// Convert from [`Vec`] of [`Card`]s.
     ///
@@ -489,9 +514,9 @@ impl From<Vec<Card>> for PlayData {
     fn from(input: Vec<Card>) -> PlayData {
         let mut data = PlayData::new();
 
-        input.into_iter().for_each(|card| {
+        for card in input {
             data.add_card(card);
-        });
+        }
 
         data
     }
