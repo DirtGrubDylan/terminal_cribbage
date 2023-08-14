@@ -22,6 +22,7 @@ where
 {
     controller: C,
     discarded: Vec<Card>,
+    pub crib: Hand,
     pub hand: Hand,
     pub points: u32,
 }
@@ -45,6 +46,7 @@ where
         Player {
             controller,
             discarded: Vec::new(),
+            crib: Hand::new(),
             hand: Hand::new(),
             points: 0,
         }
@@ -67,8 +69,9 @@ where
     pub fn new_with_cards(controller: C, cards: Vec<Card>) -> Player<C> {
         Player {
             controller,
-            hand: Hand::from(cards),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards),
             points: 0,
         }
     }
@@ -326,8 +329,9 @@ mod tests {
     fn test_new() {
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::new(),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -347,8 +351,9 @@ mod tests {
 
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::from(cards.clone()),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards.clone()),
             points: 0,
         };
 
@@ -365,8 +370,9 @@ mod tests {
 
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::from(vec![card.clone()]),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(vec![card.clone()]),
             points: 0,
         };
 
@@ -433,8 +439,9 @@ mod tests {
 
         let expected_player = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::new(),
             discarded: expected_discarded.clone(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -480,8 +487,9 @@ mod tests {
 
         let expected_player = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::new(),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -505,8 +513,9 @@ mod tests {
 
         let expected = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::from(cards.clone()),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards.clone()),
             points: 0,
         };
 
