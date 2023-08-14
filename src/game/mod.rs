@@ -101,6 +101,7 @@ where
         let dealer_chosen_card = self.dealer.choose_card_for_cut(&mut temp_deck).unwrap();
         let pone_chosen_card = self.pone.choose_card_for_cut(&mut temp_deck).unwrap();
 
+        // Maybe do a memswap instead
         if dealer_chosen_card < pone_chosen_card {
             let temp_player = self.dealer.clone();
 
