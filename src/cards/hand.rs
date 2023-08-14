@@ -201,6 +201,29 @@ impl Hand {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    /// Retuns the length of the [`Hand`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Hand, Rank, Suit};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Jack, Suit::Clubs),
+    ///     Card::new(Rank::Five, Suit::Diamonds),
+    ///     Card::new(Rank::Five, Suit::Hearts),
+    ///     Card::new(Rank::Five, Suit::Spades),
+    /// ];
+    ///
+    /// let hand = Hand::from(cards);
+    ///
+    /// assert_eq!(hand.len(), 4);
+    /// ```
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 impl Default for Hand {

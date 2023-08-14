@@ -195,7 +195,40 @@ impl Display {
     where
         C: Controller,
     {
-        unimplemented!()
+        let mut result = Vec::new();
+
+        result.push(Self::spacer());
+
+        result.push(format!(
+            "Player Points: {} | Opponent Points: {}",
+            player.points, opponent.points
+        ));
+        result.push(format!("Starter: {starter}"));
+        result.push(format!("Player Hand: {}", player.hand));
+
+        if player.has_crib() {
+            result.push(format!("Player Crib: {}", player.crib));
+        }
+
+        result.push(format!("Opponent Hand Size: {}", opponent.hand.len()));
+
+        let opponent_last_played = opponent
+            .last_discarded()
+            .map_or(String::new(), |card| card.to_string());
+
+        result.push(format!("Opponent Last Played: {}", opponent_last_played));
+
+        let play_stack_str = play_data
+            .stack
+            .iter()
+            .map(|card| card.to_string())
+            .join(",");
+
+        result.push(format!("Play Stack: [ {} ]", play_stack_str));
+
+        result.push(Self::spacer());
+
+        result.join(&self.joiner)
     }
 
     /// The [`String`] display for both [`Player`]s and the starter [`Card`] during counting.
@@ -238,7 +271,7 @@ mod tests {
     use super::*;
 
     use crate::cards::{Card, Rank, Suit};
-    use crate::game::{Player, PredeterminedController};
+    use crate::game::{PlayData, Player, PredeterminedController};
 
     #[test]
     fn test_game_before_play_to_string_discard_to_crib_no_starter() {
@@ -338,5 +371,100 @@ mod tests {
         assert_eq!(result, expected);
     }
 
+    #[test]
+    fn test_game_during_play_to_string_with_crib() {
+        let display = Display::new();
 
+        let starter = Card::new(Rank::Four, Suit::Diamonds);
+        let controller = PredeterminedController::from(vec![3]);
+
+        let player_1_hand = vec![
+            Card::new(Rank::Eight, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+        ];
+        let crib = vec![
+            Card::new(Rank::Ace, Suit::Clubs),
+            Card::new(Rank::Two, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+        ];
+        let player_1 = Player::new_with_cards_and_crib(controller.clone(), player_1_hand, crib);
+
+        let player_2_hand = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+
+        let stack = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+        ];
+        let mut play_data = PlayData::from(stack);
+
+        play_data.play_once(&mut player_2, &player_1);
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Points: 0 | Opponent Points: 0\n"
+            + "Starter: [4♦]\n"
+            + "Player Hand: [ [8♠],[K♣],[6♦] ]\n"
+            + "Player Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
+            + "Opponent Hand Size: 3\n"
+            + "Opponent Last Played: [8♣]\n"
+            + "Play Stack: [ [A♦],[8♣] ]\n"
+            + "******************************************";
+
+        let result = display.game_during_play_to_string(&starter, &player_1, &player_2, &play_data);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_game_during_play_to_string_without_crib() {
+        let display = Display::new();
+
+        let starter = Card::new(Rank::Four, Suit::Diamonds);
+        let controller = PredeterminedController::from(vec![3]);
+
+        let player_1_hand = vec![
+            Card::new(Rank::Eight, Suit::Spades),
+            Card::new(Rank::King, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+        ];
+        let player_1 = Player::new_with_cards(controller.clone(), player_1_hand);
+
+        let player_2_hand = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let mut player_2 = Player::new_with_cards(controller.clone(), player_2_hand);
+
+        let stack = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+        ];
+        let mut play_data = PlayData::from(stack);
+
+        println!("{:?}", play_data);
+
+        play_data.play_once(&mut player_2, &player_1);
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Points: 0 | Opponent Points: 0\n"
+            + "Starter: [4♦]\n"
+            + "Player Hand: [ [8♠],[K♣],[6♦] ]\n"
+            + "Opponent Hand Size: 3\n"
+            + "Opponent Last Played: [8♣]\n"
+            + "Play Stack: [ [A♦],[8♣] ]\n"
+            + "******************************************";
+
+        let result = display.game_during_play_to_string(&starter, &player_1, &player_2, &play_data);
+
+        assert_eq!(result, expected);
+    }
 }

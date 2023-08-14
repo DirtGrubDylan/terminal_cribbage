@@ -256,6 +256,41 @@ where
         possible_card
     }
 
+    /// Returns the last [`Card`] discarded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     // Index 0 -> removed after first discard.
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     // Index 1 -> 0 after first discard -> 0 on second discard -> removed on third discard.
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     // Index 2 -> 1 after first discard -> removed on second discard.
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards(controller, cards.clone());
+    ///
+    /// let result_1 = player.discard();
+    /// let result_2 = player.discard();
+    /// let result_3 = player.last_discarded();
+    ///
+    /// assert_eq!(result_1, Some(Card::new(Rank::Ace, Suit::Hearts)));
+    /// assert_eq!(result_2, Some(Card::new(Rank::Ace, Suit::Clubs)));
+    /// assert_eq!(result_3, Some(&Card::new(Rank::Ace, Suit::Clubs)));
+    /// ```
+    #[must_use]
+    pub fn last_discarded(&self) -> Option<&Card> {
+        self.discarded.last()
+    }
+
+
     /// Removes, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
     ///
     /// This [`Card`] is determined by the [`Player::controller`].
