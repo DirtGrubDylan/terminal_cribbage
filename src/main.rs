@@ -1,9 +1,11 @@
 extern crate libterminal_cribbage;
 
+use std::io::{self, Write};
+
 use libterminal_cribbage::cards::{Deck, Hand};
 use libterminal_cribbage::game::{Player, PredeterminedController};
 
-fn main() {
+fn main() -> io::Result<()> {
     let mut d = Deck::new();
 
     println!("Deck unshuffled: {d}");
@@ -45,4 +47,43 @@ fn main() {
     let player_str = player.to_string();
 
     println!("Player to string: {player_str}");
+
+    println!("********************************************************");
+
+    let mut turn = 0;
+    let mut input = String::new();
+
+    while input != "6" {
+        input.clear();
+
+        print!("Please type something: ");
+
+        io::stdout().flush()?;
+
+        input = if turn % 2 == 0 {
+            get_something()
+        } else {
+            get_something_auto()
+        };
+
+        if turn % 2 == 1 {
+            println!("{input}");
+        }
+
+        turn += 1;
+    }
+
+    Ok(())
+}
+
+fn get_something_auto() -> String {
+    "1".to_string()
+}
+
+fn get_something() -> String {
+    let mut input = String::new();
+
+    io::stdin().read_line(&mut input);
+
+    input.trim().to_string()
 }

@@ -12,12 +12,17 @@ use crate::game::{Controller, Player};
 ///
 /// Ideal display would be:
 ///
+///
+/// Player cuts deck for dealer;
+/// *************************************
+/// Choose Card to Cut (0 to 52): _
+/// *************************************
+///
 /// Player has crib, but starter card is not flipped;
 /// *************************************
 /// Player Points: 0 | Opponent Points: 0
 /// Starter: [?]
 /// Player Hand: [8♠],[K♣],[2♠],[6♦],[5♦],[5♣]
-/// Player Crib:
 /// Choose Card to Discard (0 to 5): _
 /// *************************************
 ///
@@ -26,7 +31,6 @@ use crate::game::{Controller, Player};
 /// Player Points: 0 | Opponent Points: 0
 /// Starter: [?]
 /// Player Hand: [8♠],[K♣],[2♠],[6♦],[5♦],[5♣]
-/// Player Crib:
 /// Choose Card to Discard (0 to 5): q
 /// Card "q" is not valid!
 /// Choose Card to Discard (0 to 5): _

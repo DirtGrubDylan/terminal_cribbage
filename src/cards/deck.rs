@@ -90,6 +90,48 @@ impl Deck {
     pub fn deal(&mut self) -> Option<Card> {
         self.0.pop()
     }
+
+    /// Removes a [`Card`] from the [`Deck`].
+    ///
+    /// # Errors
+    ///
+    /// If the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Deck, Card, Rank, Suit};
+    ///
+    /// let mut deck = Deck::new();
+    ///
+    /// // Removes the 13th card from deck (12 is the index from 0).
+    /// let result = deck.remove(12);
+    ///
+    /// assert_eq!(result, Ok(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(deck.as_vec().len(), 51);
+    /// ```
+    pub fn remove(&mut self, index_of_card: usize) -> Result<Card, String> {
+        if self.0.len() <= index_of_card {
+            return Err("Out of Bounds!".to_string());
+        }
+
+        Ok(self.0.remove(index_of_card))
+    }
+
+    /// Returns [`Vec`] representation of the [`Deck`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Deck, Card, Rank, Suit};
+    ///
+    /// let deck = Deck::new();
+    ///
+    /// let deck_vec = deck.as_vec();
+    /// ```
+    pub fn as_vec(&self) -> &Vec<Card> {
+        &self.0
+    }
 }
 
 impl Default for Deck {

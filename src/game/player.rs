@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::fmt;
 
-use cards::{Card, Hand};
+use cards::{Card, Deck, Hand};
 use game::Controller;
 
 /// The representation of a player with a [`Hand`], a discarded pile, a [`Controller`], and points.
@@ -111,6 +111,48 @@ where
     /// ```
     pub fn has_cards(&self) -> bool {
         !self.hand.is_empty()
+    }
+
+    /// Chooses [`Card`] for the cut from given [`Deck`], which is removed from the [`Deck`].
+    ///
+    /// This [`Card`] is determined by the [`Player::controller`] and is
+    /// added to [`Player::discarded`].
+    ///
+    /// # Panics
+    ///
+    /// If the [`Player::controller`] returns an index that is out of bounds of the
+    /// [`Deck`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let mut deck = Deck::new();
+    ///
+    /// // Cut the 13th card from the deck (12 is the index from 0).
+    /// let controller = PredeterminedController::from(vec![12]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
+    /// let result = player.choose_card_for_cut(&mut deck);
+    ///
+    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(deck.as_vec().len(), 51);
+    /// ```
+    #[must_use]
+    pub fn choose_card_for_cut(&mut self, deck: &mut Deck) -> Option<Card> {
+        let possible_card = self
+            .controller
+            .get_card_index(deck.as_vec())
+            .map(|index| deck.remove(index).unwrap());
+
+        if let Some(card) = possible_card.clone() {
+            self.discarded.push(card);
+        }
+
+        possible_card
     }
 
     /// Discards, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
