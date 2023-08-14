@@ -41,4 +41,8 @@ fn main() {
     let _ = player.discard();
 
     println!("Player after two discards: {player}");
+
+    let player_str = player.to_string();
+
+    println!("Player to string: {player_str}");
 }
