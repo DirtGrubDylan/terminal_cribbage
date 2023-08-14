@@ -188,7 +188,7 @@ where
     ///
     /// let result = player.choose_card_for_cut(&mut deck);
     ///
-    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Hearts)));
     /// assert_eq!(deck.as_vec().len(), 51);
     /// ```
     #[must_use]

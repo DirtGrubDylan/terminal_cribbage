@@ -14,8 +14,8 @@ pub struct Deck(Vec<Card>);
 impl Deck {
     /// Constructs a new `Deck`.
     ///
-    /// The `Deck` is constructed the same way every time. Starting with [`Suit::Clubs`] through
-    /// [`Suit::Spades`], it loops through [`Rank::Ace`] to [`Rank::King`] to build a deck in order.
+    /// The `Deck` is constructed the same way every time. Starting with [`Suit::Hearts`] through
+    /// [`Suit::Clubs`], it loops through [`Rank::Ace`] to [`Rank::King`] to build a deck in order.
     ///
     /// # Examples
     ///
@@ -44,7 +44,7 @@ impl Deck {
             Rank::Queen,
             Rank::King,
         ];
-        let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
+        let suits: Vec<Suit> = vec![Suit::Hearts, Suit::Spades, Suit::Diamonds, Suit::Clubs];
 
         for suit in suits {
             for &rank in &ranks {
@@ -52,6 +52,30 @@ impl Deck {
             }
         }
 
+        Deck(cards)
+    }
+
+    /// Constructs a new `Deck` from an array of [`Cards`].
+    ///
+    /// Mainly used for testing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Eight, Suit::Diamonds),
+    ///     Card::new(Rank::King, Suit::Diamonds),
+    ///     Card::new(Rank::Six, Suit::Clubs),
+    ///     Card::new(Rank::Eight, Suit::Clubs),
+    /// ];
+    /// let deck = Deck::new_with_cards(cards);
+    ///
+    /// println!("Preset deck of cards: {}", deck);
+    /// ```
+    #[must_use]
+    pub fn new_with_cards(cards: Vec<Card>) -> Deck {
         Deck(cards)
     }
 
@@ -85,7 +109,7 @@ impl Deck {
     ///
     /// let dealt_card = deck.deal();
     ///
-    /// assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Spades)));
+    /// assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Clubs)));
     /// ```
     pub fn deal(&mut self) -> Option<Card> {
         self.0.pop()
@@ -107,7 +131,7 @@ impl Deck {
     /// // Removes the 13th card from deck (12 is the index from 0).
     /// let result = deck.remove(12);
     ///
-    /// assert_eq!(result, Ok(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(result, Ok(Card::new(Rank::King, Suit::Hearts)));
     /// assert_eq!(deck.as_vec().len(), 51);
     /// ```
     pub fn remove(&mut self, index_of_card: usize) -> Result<Card, String> {
@@ -173,7 +197,7 @@ mod test {
             Rank::Queen,
             Rank::King,
         ];
-        let suits: Vec<Suit> = vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades];
+        let suits: Vec<Suit> = vec![Suit::Hearts, Suit::Spades, Suit::Diamonds, Suit::Clubs];
 
         for suit in suits {
             for &rank in &ranks {
@@ -183,10 +207,10 @@ mod test {
 
         assert!(test_deck
             .0
-            .starts_with(&[Card::new(Rank::Ace, Suit::Clubs)]));
+            .starts_with(&[Card::new(Rank::Ace, Suit::Hearts)]));
         assert!(test_deck
             .0
-            .ends_with(&[Card::new(Rank::King, Suit::Spades)]));
+            .ends_with(&[Card::new(Rank::King, Suit::Clubs)]));
         assert_eq!(test_deck.0.len(), 52);
     }
 
@@ -219,14 +243,14 @@ mod test {
         let mut dealt_card = test_deck.deal();
 
         assert_eq!(test_deck.0.len(), 51);
-        assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Spades)));
+        assert_eq!(dealt_card, Some(Card::new(Rank::King, Suit::Clubs)));
 
         for _ in 0..51 {
             dealt_card = test_deck.deal();
         }
 
         assert!(test_deck.0.is_empty());
-        assert_eq!(dealt_card, Some(Card::new(Rank::Ace, Suit::Clubs)));
+        assert_eq!(dealt_card, Some(Card::new(Rank::Ace, Suit::Hearts)));
 
         dealt_card = test_deck.deal();
 
