@@ -1,4 +1,7 @@
-use cards::{Card, Hand};
+use itertools::Itertools;
+use std::fmt;
+
+use cards::{Card, Deck, Hand};
 use game::Controller;
 
 /// The representation of a player with a [`Hand`], a discarded pile, a [`Controller`], and points.
@@ -18,8 +21,9 @@ where
     C: Controller,
 {
     controller: C,
-    hand: Hand,
     discarded: Vec<Card>,
+    pub crib: Hand,
+    pub hand: Hand,
     pub points: u32,
 }
 
@@ -41,13 +45,14 @@ where
     pub fn new(controller: C) -> Player<C> {
         Player {
             controller,
-            hand: Hand::new(),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         }
     }
 
-    /// Creates a new [`Player`] with a given [`Controller`] and [`Card`]s.
+    /// Creates a new [`Player`] with a given [`Controller`] and [`Player::hand`] of given [`Card`]s.
     ///
     /// # Examples
     ///
@@ -64,8 +69,38 @@ where
     pub fn new_with_cards(controller: C, cards: Vec<Card>) -> Player<C> {
         Player {
             controller,
-            hand: Hand::from(cards),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards),
+            points: 0,
+        }
+    }
+
+    /// Creates a new [`Player`] with a given [`Controller`], [`Player::hand`], and
+    /// [`Player::crib`] of given [`Card`]s.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![Card::new(Rank::Ace, Suit::Hearts), Card::new(Rank::Ace, Suit::Clubs)];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player = Player::new_with_cards_and_crib(controller, cards.clone(), cards.clone());
+    /// ```
+    pub fn new_with_cards_and_crib(
+        controller: C,
+        hand_cards: Vec<Card>,
+        crib_cards: Vec<Card>,
+    ) -> Player<C> {
+        Player {
+            controller,
+            discarded: Vec::new(),
+            crib: Hand::from(crib_cards),
+            hand: Hand::from(hand_cards),
             points: 0,
         }
     }
@@ -88,6 +123,24 @@ where
         self.hand.add_card(card);
     }
 
+    /// Add a [`Card`] to [`Player::crib`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
+    /// player.add_card_to_crib(Card::new(Rank::Ace, Suit::Spades));
+    /// ```
+    pub fn add_card_to_crib(&mut self, card: Card) {
+        self.crib.add_card(card);
+    }
+
     /// Indicates that the [`Player`] has [`Card`]s in [`Player::hand`].
     ///
     /// # Examples
@@ -108,6 +161,48 @@ where
     /// ```
     pub fn has_cards(&self) -> bool {
         !self.hand.is_empty()
+    }
+
+    /// Chooses [`Card`] for the cut from given [`Deck`], which is removed from the [`Deck`].
+    ///
+    /// This [`Card`] is determined by the [`Player::controller`] and is
+    /// added to [`Player::discarded`].
+    ///
+    /// # Panics
+    ///
+    /// If the [`Player::controller`] returns an index that is out of bounds of the
+    /// [`Deck`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let mut deck = Deck::new();
+    ///
+    /// // Cut the 13th card from the deck (12 is the index from 0).
+    /// let controller = PredeterminedController::from(vec![12]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
+    /// let result = player.choose_card_for_cut(&mut deck);
+    ///
+    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(deck.as_vec().len(), 51);
+    /// ```
+    #[must_use]
+    pub fn choose_card_for_cut(&mut self, deck: &mut Deck) -> Option<Card> {
+        let possible_card = self
+            .controller
+            .get_card_index(deck.as_vec())
+            .map(|index| deck.remove(index).unwrap());
+
+        if let Some(card) = possible_card.clone() {
+            self.discarded.push(card);
+        }
+
+        possible_card
     }
 
     /// Discards, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
@@ -160,6 +255,41 @@ where
 
         possible_card
     }
+
+    /// Returns the last [`Card`] discarded.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     // Index 0 -> removed after first discard.
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     // Index 1 -> 0 after first discard -> 0 on second discard -> removed on third discard.
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     // Index 2 -> 1 after first discard -> removed on second discard.
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards(controller, cards.clone());
+    ///
+    /// let result_1 = player.discard();
+    /// let result_2 = player.discard();
+    /// let result_3 = player.last_discarded();
+    ///
+    /// assert_eq!(result_1, Some(Card::new(Rank::Ace, Suit::Hearts)));
+    /// assert_eq!(result_2, Some(Card::new(Rank::Ace, Suit::Clubs)));
+    /// assert_eq!(result_3, Some(&Card::new(Rank::Ace, Suit::Clubs)));
+    /// ```
+    #[must_use]
+    pub fn last_discarded(&self) -> Option<&Card> {
+        self.discarded.last()
+    }
+
 
     /// Removes, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
     ///
@@ -252,6 +382,39 @@ where
     pub fn has_card_with_score_at_most(&self, value: u32) -> bool {
         self.hand.as_vec().iter().any(|card| card.score() <= value)
     }
+
+    /// Indicats if [`Player`] has a non-empty crib.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
+    /// assert!(!player.has_crib());
+    /// ```
+    #[must_use]
+    pub fn has_crib(&self) -> bool {
+        !self.crib.as_vec().is_empty()
+    }
+}
+
+impl<C> fmt::Display for Player<C>
+where
+    C: Controller,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let discarded_str_joined = self.discarded.iter().map(std::string::ToString::to_string).join(",");
+
+        write!(
+            f,
+            "Player: {{ Hand: {0}, Points: {1}, Discarded: [ {2} ] }}",
+            self.hand, self.points, discarded_str_joined
+        )
+    }
 }
 
 #[cfg(test)]
@@ -266,8 +429,9 @@ mod tests {
     fn test_new() {
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::new(),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -287,8 +451,9 @@ mod tests {
 
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::from(cards.clone()),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards.clone()),
             points: 0,
         };
 
@@ -300,13 +465,36 @@ mod tests {
     }
 
     #[test]
+    fn test_new_with_cards_and_crib() {
+        let cards = vec![
+            Card::new(Rank::Ace, Suit::Hearts),
+            Card::new(Rank::Ace, Suit::Clubs),
+        ];
+
+        let expected = Player {
+            controller: PredeterminedController::from(vec![0, 1, 2]),
+            discarded: Vec::new(),
+            crib: Hand::from(cards.clone()),
+            hand: Hand::from(cards.clone()),
+            points: 0,
+        };
+
+        let controller = PredeterminedController::from(vec![0, 1, 2]);
+
+        let result = Player::new_with_cards_and_crib(controller, cards.clone(), cards);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_add_card() {
         let card = Card::new(Rank::Ace, Suit::Spades);
 
         let expected = Player {
             controller: PredeterminedController::from(vec![0, 1, 2]),
-            hand: Hand::from(vec![card.clone()]),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(vec![card.clone()]),
             points: 0,
         };
 
@@ -315,6 +503,27 @@ mod tests {
         let mut player = Player::new(controller);
 
         player.add_card(card);
+
+        assert_eq!(player, expected);
+    }
+
+    #[test]
+    fn test_add_card_to_crib() {
+        let card = Card::new(Rank::Ace, Suit::Spades);
+
+        let expected = Player {
+            controller: PredeterminedController::from(vec![0, 1, 2]),
+            discarded: Vec::new(),
+            crib: Hand::from(vec![card.clone()]),
+            hand: Hand::new(),
+            points: 0,
+        };
+
+        let controller = PredeterminedController::from(vec![0, 1, 2]);
+
+        let mut player = Player::new(controller);
+
+        player.add_card_to_crib(card);
 
         assert_eq!(player, expected);
     }
@@ -350,7 +559,7 @@ mod tests {
 
         let mut player = Player::new(controller);
 
-        player.add_card(card.clone());
+        player.add_card(card);
 
         let _ = player.discard();
     }
@@ -373,8 +582,9 @@ mod tests {
 
         let expected_player = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::new(),
             discarded: expected_discarded.clone(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -420,8 +630,9 @@ mod tests {
 
         let expected_player = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::new(),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::new(),
             points: 0,
         };
 
@@ -445,8 +656,9 @@ mod tests {
 
         let expected = Player {
             controller: PredeterminedController::from(Vec::new()),
-            hand: Hand::from(cards.clone()),
             discarded: Vec::new(),
+            crib: Hand::new(),
+            hand: Hand::from(cards.clone()),
             points: 0,
         };
 

@@ -924,7 +924,7 @@ mod tests {
         let player_1 = Player::new_with_cards(controller.clone(), player_1_cards);
 
         let player_2_cards = Vec::new();
-        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
 
         let stack = vec![
             Card::new(Rank::King, Suit::Clubs),
@@ -952,7 +952,7 @@ mod tests {
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
 
         let stack = vec![
             Card::new(Rank::King, Suit::Clubs),
@@ -980,7 +980,7 @@ mod tests {
             Card::new(Rank::Ace, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
 
         let stack = vec![
             Card::new(Rank::King, Suit::Clubs),
@@ -1009,7 +1009,7 @@ mod tests {
             Card::new(Rank::Two, Suit::Clubs),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let player_2 = Player::new_with_cards(controller.clone(), player_2_cards);
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
 
         let stack = vec![
             Card::new(Rank::King, Suit::Clubs),

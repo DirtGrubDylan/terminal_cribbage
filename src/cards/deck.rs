@@ -1,5 +1,6 @@
 use std::fmt;
 
+use itertools::Itertools;
 use rand::seq::SliceRandom;
 
 use cards::{Card, Rank, Suit};
@@ -89,6 +90,49 @@ impl Deck {
     pub fn deal(&mut self) -> Option<Card> {
         self.0.pop()
     }
+
+    /// Removes a [`Card`] from the [`Deck`].
+    ///
+    /// # Errors
+    ///
+    /// If the index is out of bounds.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Deck, Card, Rank, Suit};
+    ///
+    /// let mut deck = Deck::new();
+    ///
+    /// // Removes the 13th card from deck (12 is the index from 0).
+    /// let result = deck.remove(12);
+    ///
+    /// assert_eq!(result, Ok(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(deck.as_vec().len(), 51);
+    /// ```
+    pub fn remove(&mut self, index_of_card: usize) -> Result<Card, String> {
+        if self.0.len() <= index_of_card {
+            return Err("Out of Bounds!".to_string());
+        }
+
+        Ok(self.0.remove(index_of_card))
+    }
+
+    /// Returns [`Vec`] representation of the [`Deck`]
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Deck, Card, Rank, Suit};
+    ///
+    /// let deck = Deck::new();
+    ///
+    /// let deck_vec = deck.as_vec();
+    /// ```
+    #[must_use]
+    pub fn as_vec(&self) -> &Vec<Card> {
+        &self.0
+    }
 }
 
 impl Default for Deck {
@@ -99,11 +143,9 @@ impl Default for Deck {
 
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        for card in &self.0 {
-            write!(formatter, "\n{card}")?;
-        }
+        let cards_str_joined = self.0.iter().map(std::string::ToString::to_string).join(",");
 
-        write!(formatter, "")
+        write!(formatter, "[ {cards_str_joined} ]")
     }
 }
 
