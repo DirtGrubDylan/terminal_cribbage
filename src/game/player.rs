@@ -1,3 +1,6 @@
+use itertools::Itertools;
+use std::fmt;
+
 use cards::{Card, Hand};
 use game::Controller;
 
@@ -251,6 +254,21 @@ where
     #[must_use]
     pub fn has_card_with_score_at_most(&self, value: u32) -> bool {
         self.hand.as_vec().iter().any(|card| card.score() <= value)
+    }
+}
+
+impl<C> fmt::Display for Player<C>
+where
+    C: Controller,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let discarded_str_joined = self.discarded.iter().map(|card| card.to_string()).join(",");
+
+        write!(
+            f,
+            "Player: {{ Hand: {0}, Points: {1}, Discarded: [ {2} ] }}",
+            self.hand, self.points, discarded_str_joined
+        )
     }
 }
 

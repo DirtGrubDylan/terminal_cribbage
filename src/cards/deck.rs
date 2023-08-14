@@ -1,5 +1,6 @@
 use std::fmt;
 
+use itertools::Itertools;
 use rand::seq::SliceRandom;
 
 use cards::{Card, Rank, Suit};
@@ -99,11 +100,9 @@ impl Default for Deck {
 
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        for card in &self.0 {
-            write!(formatter, "\n{card}")?;
-        }
+        let cards_str_joined = self.0.iter().map(|card| card.to_string()).join(",");
 
-        write!(formatter, "")
+        write!(formatter, "[ {cards_str_joined} ]")
     }
 }
 

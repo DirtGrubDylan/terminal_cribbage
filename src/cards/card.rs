@@ -57,7 +57,7 @@ impl Card {
     /// cards are all worth 10 and the [`Rank::Ace`] is worth 1.
     ///
     /// # Exampless
-    ///    
+    ///
     /// ```
     /// use libterminal_cribbage::cards::{Card, Rank, Suit};
     ///

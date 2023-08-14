@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::fmt;
 
 use cards::score;
@@ -210,11 +211,9 @@ impl Default for Hand {
 
 impl fmt::Display for Hand {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        for card in &self.0 {
-            write!(formatter, "\n{card}")?;
-        }
+        let cards_str_joined = self.0.iter().map(|card| card.to_string()).join(",");
 
-        write!(formatter, "")
+        write!(formatter, "[ {cards_str_joined} ]")
     }
 }
 
