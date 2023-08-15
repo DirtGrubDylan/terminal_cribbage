@@ -244,8 +244,14 @@ where
         // Count pone hand first
         // Then count dealer hand and crib
         // if either player score is 121 end game
+        self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
 
-        unimplemented!()
+        if 121 <= self.pone.points {
+            return;
+        }
+
+        self.dealer.points += self.dealer.hand.total(starter, /*is_crib=*/ false);
+        self.dealer.points += self.dealer.crib.total(starter, /*is_crib=*/ true);
     }
 }
 
@@ -652,5 +658,94 @@ mod tests {
         assert_eq!(game.pone.hand.as_vec().len(), 4);
         assert!(game.dealer.discarded.is_empty());
         assert!(game.pone.discarded.is_empty());
+    }
+
+    #[test]
+    fn test_game_run_counting_round() {
+        let controller = PredeterminedController::from(Vec::new());
+
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
+
+        // Hand Score 6pts: 15 2pts, 3-run 3pts, Nobs 1pt
+        // Crib Score 13pts: 15 4pts, 4-run 4pts, 5-flush 5pts
+        // Total Score 19pts
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let player_1_crib = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+        ];
+        let player_1 =
+            Player::new_with_cards_and_crib(controller.clone(), player_1_cards, player_1_crib);
+
+        // Hand Score 12pts: 15 4pts, Pair 2pts, 2x 3-run 6pts
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
+
+        let mut game = Game::new(player_1, player_2);
+
+        let expected_dealer_points = 19;
+        let expected_pone_points = 12;
+
+        game.run_counting_round(&starter);
+
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
+    }
+
+    #[test]
+    fn test_game_run_counting_round_player_2_hit_121_before_player_1_can_count() {
+        let controller = PredeterminedController::from(Vec::new());
+
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
+
+        // Hand Score 6pts: 15 2pts, 3-run 3pts, Nobs 1pt
+        // Crib Score 13pts: 15 4pts, 4-run 4pts, 5-flush 5pts
+        // Total Score 19pts
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let player_1_crib = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+        ];
+        let player_1 =
+            Player::new_with_cards_and_crib(controller.clone(), player_1_cards, player_1_crib);
+
+        // Hand Score 12pts: 15 4pts, Pair 2pts, 2x 3-run 6pts
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let mut player_2 = Player::new_with_cards(controller, player_2_cards);
+        player_2.points = 110;
+
+        let mut game = Game::new(player_1, player_2);
+
+        let expected_dealer_points = 0;
+        let expected_pone_points = 122;
+
+        game.run_counting_round(&starter);
+
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
     }
 }
