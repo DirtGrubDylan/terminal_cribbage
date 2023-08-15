@@ -197,7 +197,7 @@ where
     ///
     /// # Panics
     ///
-    /// If something goes wrong with counting turns or if this method exceeded 1,000 turns.
+    /// If something goes wrong with counting turns or if this method exceeded 100 turns.
     fn run_play_round(&mut self) {
         //     * if turn % 2 is 0 -> pone plays
         //     * if turn % 2 is 1 -> dealer plays
@@ -214,26 +214,33 @@ where
                 _ => panic!("Something went wrong with alternating turns: {}", turn),
             }
 
+            if (121 <= self.dealer.points) || (121 <= self.pone.points) {
+                break;
+            }
+
             let reset = play_data.reset_if_needed(&self.dealer, &self.pone);
 
             if !reset {
                 turn += 1;
             }
 
-            // Panic
-            if 1_000 <= turn {
+            // Panic if too many turns has taken place.
+            if 100 <= turn {
                 panic!(
                     "Too many turns!\nTurn: {}\nPlayData: {:?}\nDealer: {:?}\nPone: {:?}",
                     turn, play_data, self.dealer, self.pone
                 );
             }
         }
+
+        self.dealer.gather_discarded();
+        self.pone.gather_discarded();
     }
 
     /// This method facilitates the scoring round.
     ///
     /// The players hands/cribs are scored, with the starter card, starting with the Pone.
-    fn run_counting_round(&mut self) {
+    fn run_counting_round(&mut self, starter: &Card) {
         // Count pone hand first
         // Then count dealer hand and crib
         // if either player score is 121 end game
@@ -591,5 +598,59 @@ mod tests {
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
+
+        // assert that the hands were reset
+        assert_eq!(game.dealer.hand.as_vec().len(), 4);
+        assert_eq!(game.pone.hand.as_vec().len(), 4);
+        assert!(game.dealer.discarded.is_empty());
+        assert!(game.pone.discarded.is_empty());
+    }
+
+    #[test]
+    fn test_game_run_play_round_player_1_hit_121_before_first_reset() {
+        // Play stack (start with p2) p1.points = 118 && p2.points = 120
+        //     * Stack 1 -> 7D(p2, 0pt, 7), 7C(p1, 2pt, 14), 8D(p2, 0pt, 22), 6D(p2, 3pt, 28),
+        //                  GO(p2, 1pt, 28)
+        //     * p1 hit 121 break
+        //
+        // Score at end: p1 = 120 (pair), p2 = 124 (run of 3 and a GO)
+
+        // Discard: 7C, JD, QD, KD
+        let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let mut player_1 = Player::new_with_cards(player_1_controller, player_1_cards);
+        player_1.points = 118;
+
+        // Discard: 7D, 8D, 6D, 4C
+        let player_2_controller = PredeterminedController::from(vec![2, 2, 1, 0, 69]);
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Diamonds),
+        ];
+        let mut player_2 = Player::new_with_cards(player_2_controller, player_2_cards);
+        player_2.points = 120;
+
+        let mut game = Game::new(player_1, player_2);
+
+        let expected_dealer_points = 120;
+        let expected_pone_points = 124;
+
+        game.run_play_round();
+
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
+
+        // assert that the hands were reset
+        assert_eq!(game.dealer.hand.as_vec().len(), 4);
+        assert_eq!(game.pone.hand.as_vec().len(), 4);
+        assert!(game.dealer.discarded.is_empty());
+        assert!(game.pone.discarded.is_empty());
     }
 }

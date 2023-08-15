@@ -351,7 +351,10 @@ where
     /// assert!(player.has_cards());
     /// ```
     pub fn gather_discarded(&mut self) {
-        self.hand = Hand::from(self.discarded.clone());
+        for card in self.discarded.clone() {
+            self.hand.add_card(card);
+        }
+
         self.discarded = Vec::new();
     }
 
