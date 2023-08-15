@@ -414,14 +414,22 @@ where
     ///     Card::new(Rank::Ace, Suit::Spades),
     ///     Card::new(Rank::Ace, Suit::Clubs),
     /// ];
+    /// let crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
     ///
     /// let controller = PredeterminedController::from(vec![0, 1, 0]);
     ///
-    /// let mut player = Player::new_with_cards(controller, cards.clone());
+    /// let mut player = Player::new_with_cards_and_crib(controller, cards, crib);
     ///
     /// let expected_hand = vec![
     ///     Card::new(Rank::Ace, Suit::Spades),
     ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let expected_crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
     /// ];
     /// let expected_discarded = vec![
     ///     Card::new(Rank::Ace, Suit::Hearts),
@@ -430,22 +438,30 @@ where
     /// let _ = player.discard();
     ///
     /// assert_eq!(player.hand.as_vec(), &expected_hand);
+    /// assert_eq!(player.crib.as_vec(), &expected_crib);
     /// assert_eq!(player.discarded, expected_discarded);
     ///
     /// let expected_removed = vec![
     ///     Card::new(Rank::Ace, Suit::Spades),
     ///     Card::new(Rank::Ace, Suit::Clubs),
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
     ///     Card::new(Rank::Ace, Suit::Hearts),
     /// ];
     ///
     /// assert_eq!(player.remove_all(), expected_removed);
+    /// assert_eq!(player.hand.len(), 0);
+    /// assert_eq!(player.crib.len(), 0);
+    /// assert!(player.discarded.is_empty());
     /// ```
     pub fn remove_all(&mut self) -> Vec<Card> {
         let mut result = self.hand.as_vec().clone();
 
+        result.append(&mut self.crib.as_vec().clone());
         result.append(&mut self.discarded);
 
         self.hand = Hand::new();
+        self.crib = Hand::new();
         self.discarded = Vec::new();
 
         result

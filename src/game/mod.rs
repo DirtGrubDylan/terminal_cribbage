@@ -92,9 +92,11 @@ where
         //
         //     * play: while either player has cards in hand
         //         * run play round
-        //         * if either player has 121 -> break game
+        //             * players gather discarded back into hand
         //
-        //     * players gather discarded back into hand
+        //     * if either player has 121 -> break game
+        //
+        //     * Run counting
         //
         //     * pone counts hand
         //     * if pone has 121 -> break game;
@@ -199,11 +201,6 @@ where
     ///
     /// If something goes wrong with counting turns or if this method exceeded 100 turns.
     fn run_play_round(&mut self) {
-        //     * if turn % 2 is 0 -> pone plays
-        //     * if turn % 2 is 1 -> dealer plays
-        //     * if either player score is 121 end game.
-        //
-        // use playdata struct
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
 
@@ -241,9 +238,6 @@ where
     ///
     /// The players hands/cribs are scored, with the starter card, starting with the Pone.
     fn run_counting_round(&mut self, starter: &Card) {
-        // Count pone hand first
-        // Then count dealer hand and crib
-        // if either player score is 121 end game
         self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
 
         if 121 <= self.pone.points {
@@ -252,6 +246,25 @@ where
 
         self.dealer.points += self.dealer.hand.total(starter, /*is_crib=*/ false);
         self.dealer.points += self.dealer.crib.total(starter, /*is_crib=*/ true);
+    }
+
+    /// Resets the [`Deck`].
+    ///
+    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and [`Crib`].
+    /// In addition to adding back in the starter card.
+    ///
+    /// Theoretically, this should be fine since all the [`Card`]s that the [`Player`]s have
+    /// came from the deck. Same goes for the starter.
+    fn reset_deck(&mut self, starter: Card) {
+        let mut remaining_deck_cards = self.deck.as_vec().clone();
+
+        remaining_deck_cards.append(&mut self.dealer.remove_all());
+
+        remaining_deck_cards.append(&mut self.pone.remove_all());
+
+        remaining_deck_cards.push(starter);
+
+        self.deck = Deck::new_with_cards(remaining_deck_cards);
     }
 }
 
@@ -747,5 +760,64 @@ mod tests {
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
+    }
+
+    #[test]
+    fn test_game_reset_deck() {
+        let controller = PredeterminedController::from(Vec::new());
+
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
+
+        // Hand Score 6pts: 15 2pts, 3-run 3pts, Nobs 1pt
+        // Crib Score 13pts: 15 4pts, 4-run 4pts, 5-flush 5pts
+        // Total Score 19pts
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let player_1_crib = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+        ];
+        let player_1 =
+            Player::new_with_cards_and_crib(controller.clone(), player_1_cards, player_1_crib);
+
+        // Hand Score 12pts: 15 4pts, Pair 2pts, 2x 3-run 6pts
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let mut player_2 = Player::new_with_cards(controller, player_2_cards);
+        player_2.points = 110;
+
+        let deck = Deck::new_with_cards(Vec::new());
+        let mut game = Game::new_with_deck(player_1, player_2, deck);
+
+        let expected_deck_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Diamonds),
+        ];
+        let expected_deck = Deck::new_with_cards(expected_deck_cards);
+
+        game.reset_deck(starter);
+
+        assert_eq!(game.deck, expected_deck);
     }
 }
