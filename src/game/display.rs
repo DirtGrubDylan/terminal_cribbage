@@ -135,6 +135,7 @@ use crate::game::{Controller, PlayData, Player};
 /// Crib score: 4
 /// *************************************
 ///
+#[derive(Debug, PartialEq, Clone)]
 pub struct Display {
     pub joiner: String,
 }

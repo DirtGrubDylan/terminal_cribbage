@@ -22,10 +22,10 @@ pub use self::predetermined_controller::PredeterminedController;
 use crate::cards::{Card, Deck, Hand, Rank};
 
 /// The actual game!
+#[derive(Debug, PartialEq)]
 pub struct Game<C>
 where
-    C: Controller,
-    C: Clone,
+    C: Controller + Clone + std::fmt::Debug,
 {
     dealer: Player<C>,
     pone: Player<C>,
@@ -35,8 +35,7 @@ where
 
 impl<C> Game<C>
 where
-    C: Controller,
-    C: Clone,
+    C: Controller + Clone + std::fmt::Debug,
 {
     /// Creates a new [`Game`] with given [`Player`]s.
     pub fn new(player_1: Player<C>, player_2: Player<C>) -> Game<C> {
@@ -195,16 +194,40 @@ where
     /// is not 31 or over. If one player can't make a move, they pass (GO) to the next payer.
     /// If both can't make a move, the running score is reset to zero, and the last player to
     /// put down a card gets to put down another card. This is until all cards are laid out
+    ///
+    /// # Panics
+    ///
+    /// If something goes wrong with counting turns or if this method exceeded 1,000 turns.
     fn run_play_round(&mut self) {
-        // Set a turn variable to 0
-        //
-        // If either player has cards in their hand then play
         //     * if turn % 2 is 0 -> pone plays
         //     * if turn % 2 is 1 -> dealer plays
         //     * if either player score is 121 end game.
         //
         // use playdata struct
-        unimplemented!()
+        let mut turn: usize = 0;
+        let mut play_data = PlayData::new();
+
+        while self.dealer.has_cards() || self.pone.has_cards() {
+            match turn % 2 {
+                0 => play_data.play_once(&mut self.pone, &self.dealer),
+                1 => play_data.play_once(&mut self.dealer, &self.pone),
+                _ => panic!("Something went wrong with alternating turns: {}", turn),
+            }
+
+            let reset = play_data.reset_if_needed(&self.dealer, &self.pone);
+
+            if !reset {
+                turn += 1;
+            }
+
+            // Panic
+            if 1_000 <= turn {
+                panic!(
+                    "Too many turns!\nTurn: {}\nPlayData: {:?}\nDealer: {:?}\nPone: {:?}",
+                    turn, play_data, self.dealer, self.pone
+                );
+            }
+        }
     }
 
     /// This method facilitates the scoring round.
@@ -525,6 +548,47 @@ mod tests {
 
         assert_eq!(starter, Card::new(Rank::Jack, Suit::Diamonds));
         assert_eq!(game.deck.as_vec(), &expected_deck_cards);
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
+    }
+
+    #[test]
+    fn test_game_run_play_round() {
+        // Play stack (start with p2)
+        //     * Stack 1 -> 7D(p2, 0pt, 7), 7C(p1, 2pt, 14), 8D(p2, 0pt, 22), 6D(p2, 3pt, 28),
+        //                  GO(p2, 1pt, 28)
+        //     * Stack 2 -> 4C(p2, 0pt, 4), JD(p1, 0pt, 14), QD(p1, 0pt, 24), GO(p1, 1pt, 24)
+        //     * Stack 3 -> KD(p1, 0pt, 10), GO (p1, 1pt, 10)
+        //
+        // Score at end: p1 = 4 (pair and 2 GOs), p2 = 4 (run of 3 and a GO)
+
+        // Discard: 7C, JD, QD, KD
+        let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let player_1 = Player::new_with_cards(player_1_controller, player_1_cards);
+
+        // Discard: 7D, 8D, 6D, 4C
+        let player_2_controller = PredeterminedController::from(vec![2, 2, 1, 0, 69]);
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Diamonds),
+        ];
+        let player_2 = Player::new_with_cards(player_2_controller, player_2_cards);
+
+        let mut game = Game::new(player_1, player_2);
+
+        let expected_dealer_points = 4;
+        let expected_pone_points = 4;
+
+        game.run_play_round();
+
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
     }

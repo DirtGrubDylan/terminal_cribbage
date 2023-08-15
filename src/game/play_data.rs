@@ -97,19 +97,26 @@ impl PlayData {
     /// let mut data = PlayData::from(stack);
     ///
     /// // Stack score isn't 31, but neither player can play.
-    /// data.reset_if_needed(&player_1, &player_2);
+    /// let result = data.reset_if_needed(&player_1, &player_2);
     ///
+    /// assert!(result);
     /// assert_eq!(data.stack, Vec::new());
     /// assert_eq!(data.stack_score, 0);
     /// ```
-    pub fn reset_if_needed<C>(&mut self, player_1: &Player<C>, player_2: &Player<C>)
+    pub fn reset_if_needed<C>(&mut self, player_1: &Player<C>, player_2: &Player<C>) -> bool
     where
         C: Controller,
     {
+        let mut reset = false;
+
         if !self.any_can_play(player_1, player_2) {
             self.stack = Vec::new();
             self.stack_score = 0;
+
+            reset = true;
         }
+
+        reset
     }
 
     /// Indicates if [`Player`] has a [`Card`] to make a play.
