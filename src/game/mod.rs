@@ -19,7 +19,7 @@ pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
 
-use crate::cards::{Deck, Hand};
+use crate::cards::{Card, Deck, Hand, Rank};
 
 /// The actual game!
 pub struct Game<C>
@@ -168,6 +168,23 @@ where
         let crib = Hand::from(discards);
 
         self.dealer.crib = crib;
+    }
+
+    /// Return starter [`Card`], which is the card at the top of the [`Deck`].
+    ///
+    /// If the starter is a [`Rank::Jack`], give 2 points to the dealer.
+    ///
+    /// # Panics
+    ///
+    /// If [`Deck`] is empty.
+    fn get_starter(&mut self) -> Card {
+        let starter = self.deck.deal().unwrap();
+
+        if starter.rank == Rank::Jack {
+            self.dealer.points += 2;
+        }
+
+        starter
     }
 
     /// This method facilitates the play round.
@@ -404,5 +421,111 @@ mod tests {
         assert_eq!(game.deck, Deck::new_with_cards(Vec::new()));
         assert_eq!(game.dealer, expected_player_1);
         assert_eq!(game.pone, expected_player_2);
+    }
+
+    #[test]
+    fn test_game_get_starter_not_jack() {
+        // Discard Six of Hearts and Eight of Clubs to crib
+        let player_1_controller = PredeterminedController::from(vec![0, 3, 32]);
+        let player_1 = Player::new(player_1_controller);
+
+        // Discard Five of Clubs and Six of Clubs to crib
+        let player_2_controller = PredeterminedController::from(vec![2, 3, 69]);
+        let player_2 = Player::new(player_2_controller);
+
+        // Deck is dealt in reverse!
+        let deck_cards = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Hearts),
+        ];
+        let deck = Deck::new_with_cards(deck_cards);
+
+        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+
+        let expected_deck_cards = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+        ];
+        let expected_dealer_points = 0;
+        let expected_pone_points = 0;
+
+        let starter = game.get_starter();
+
+        assert_eq!(starter, Card::new(Rank::Six, Suit::Hearts));
+        assert_eq!(game.deck.as_vec(), &expected_deck_cards);
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
+    }
+
+    #[test]
+    fn test_game_get_starter_jack() {
+        // Discard Six of Hearts and Eight of Clubs to crib
+        let player_1_controller = PredeterminedController::from(vec![0, 3, 32]);
+        let player_1 = Player::new(player_1_controller);
+
+        // Discard Five of Clubs and Six of Clubs to crib
+        let player_2_controller = PredeterminedController::from(vec![2, 3, 69]);
+        let player_2 = Player::new(player_2_controller);
+
+        // Deck is dealt in reverse!
+        let deck_cards = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Hearts),
+            Card::new(Rank::Jack, Suit::Diamonds),
+        ];
+        let deck = Deck::new_with_cards(deck_cards);
+
+        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+
+        let expected_deck_cards = vec![
+            Card::new(Rank::Eight, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Hearts),
+        ];
+        let expected_dealer_points = 2;
+        let expected_pone_points = 0;
+
+        let starter = game.get_starter();
+
+        assert_eq!(starter, Card::new(Rank::Jack, Suit::Diamonds));
+        assert_eq!(game.deck.as_vec(), &expected_deck_cards);
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
     }
 }
