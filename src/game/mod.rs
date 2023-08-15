@@ -63,6 +63,8 @@ where
 
     /// Play the full game.
     ///
+    /// The `should_shuffle` parameter is for testing.
+    ///
     /// * Each player chooses a random card from deck. The highest value card wins,
     ///   and card suit order is hearts, spades, diamonds, clubs. The winner is the
     ///   dealer who gets the crib.
@@ -79,12 +81,14 @@ where
     ///   put down a card gets to put down another card. This is until all cards are laid out
     /// * Afterwards the players hands/cribs are scored, with the starter card, starting with the Pone.
     /// * If neither players score is 121, then switch dealer and loop from dealing cards step.
-    pub fn play(&mut self) {
+    pub fn play(&mut self, should_shuffle: bool) {
         // make copies of players and deck for reset
         //
         // Choose dealer
         //
         // game: while dealer.points != 121 || player.points != 121
+        //     * Shuffle Deck
+        //
         //     * Flip starter
         //         * If jack -> add 2pts to dealer
         //
@@ -107,6 +111,10 @@ where
         //         * drain players hands and crib to deck
         //         * assert players hands/crib are empty
         //         * assert deck is same size as last
+        //
+        //     * swap dealer/pone
+
+        
 
         unimplemented!()
     }
