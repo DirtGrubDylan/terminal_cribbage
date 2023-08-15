@@ -21,7 +21,7 @@ where
     C: Controller,
 {
     controller: C,
-    discarded: Vec<Card>,
+    pub discarded: Vec<Card>,
     pub crib: Hand,
     pub hand: Hand,
     pub points: u32,
@@ -396,6 +396,56 @@ where
     #[must_use]
     pub fn has_crib(&self) -> bool {
         !self.crib.as_vec().is_empty()
+    }
+
+    /// Removes all cards from [`Player::discarded`] and [`Player::hand`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards(controller, cards.clone());
+    ///
+    /// let expected_hand = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let expected_discarded = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// let _ = player.discard();
+    ///
+    /// assert_eq!(player.hand.as_vec(), &expected_hand);
+    /// assert_eq!(player.discarded, expected_discarded);
+    ///
+    /// let expected_removed = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// assert_eq!(player.remove_all(), expected_removed);
+    /// ```
+    pub fn remove_all(&mut self) -> Vec<Card> {
+        let mut result = self.hand.as_vec().clone();
+
+        result.append(&mut self.discarded);
+
+        self.hand = Hand::new();
+        self.discarded = Vec::new();
+
+        result
     }
 }
 
