@@ -19,7 +19,7 @@ pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
 
-use crate::cards::Deck;
+use crate::cards::{Deck, Hand};
 
 /// The actual game!
 pub struct Game<C>
@@ -141,13 +141,33 @@ where
     /// Each [`Player`] is dealt 6 [`Card`]s. Then [`Player`]s choose 2 [`Card`]s to discard.
     /// These [`Card`]s are put into a new [`Hand`], and given to the dealer [`Player`] as
     /// their crib.
+    ///
+    /// # Panics
+    ///
+    /// * If there are not enough [`Card`]s in the deck to deal 12 [`Card`]s.
+    /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
+    ///
     fn run_discard_round(&mut self) {
-        // Alternate deal two cards to each player
-        // Let players each remove (discard) two cards
-        // Consolidate the cards to a new hand.
-        // Set dealer.crib to that new hand.
-        
-        unimplemented!()
+        for _ in 0..6 {
+            match (self.deck.deal(), self.deck.deal()) {
+                (Some(card_1), Some(card_2)) => {
+                    self.dealer.add_card(card_1);
+                    self.pone.add_card(card_2);
+                }
+                _ => panic!("There are not enough cards to deal!"),
+            }
+        }
+
+        let discards = vec![
+            self.dealer.remove_card().unwrap(),
+            self.dealer.remove_card().unwrap(),
+            self.pone.remove_card().unwrap(),
+            self.pone.remove_card().unwrap(),
+        ];
+
+        let crib = Hand::from(discards);
+
+        self.dealer.crib = crib;
     }
 
     /// This method facilitates the play round.
@@ -323,14 +343,15 @@ mod tests {
 
     #[test]
     fn test_game_run_discard_round() {
-        // Discard Six of Clubs and Five of Clubs to crib
-        let player_1_controller = PredeterminedController::from(vec![1, 2, 32]);
+        // Discard Six of Hearts and Eight of Clubs to crib
+        let player_1_controller = PredeterminedController::from(vec![0, 3, 32]);
         let player_1 = Player::new(player_1_controller);
 
-        // Discard Eight of Clubs and Six of Hearts to crib
-        let player_2_controller = PredeterminedController::from(vec![1, 4, 69]);
+        // Discard Five of Clubs and Six of Clubs to crib
+        let player_2_controller = PredeterminedController::from(vec![2, 3, 69]);
         let player_2 = Player::new(player_2_controller);
 
+        // Deck is dealt in reverse!
         let deck_cards = vec![
             Card::new(Rank::Eight, Suit::Diamonds),
             Card::new(Rank::King, Suit::Diamonds),
@@ -350,16 +371,16 @@ mod tests {
         let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
 
         let expected_player_1_cards = vec![
-            Card::new(Rank::Eight, Suit::Diamonds),
-            Card::new(Rank::Seven, Suit::Diamonds),
-            Card::new(Rank::Six, Suit::Diamonds),
-            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
         ];
         let expected_player_1_crib = vec![
-            Card::new(Rank::Six, Suit::Clubs),
-            Card::new(Rank::Five, Suit::Clubs),
-            Card::new(Rank::Eight, Suit::Clubs),
             Card::new(Rank::Six, Suit::Hearts),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Clubs),
         ];
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new_with_cards_and_crib(
@@ -369,18 +390,19 @@ mod tests {
         );
 
         let expected_player_2_cards = vec![
-            Card::new(Rank::King, Suit::Diamonds),
-            Card::new(Rank::Queen, Suit::Diamonds),
-            Card::new(Rank::Seven, Suit::Clubs),
-            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Diamonds),
         ];
         let expected_player_2_controller = PredeterminedController::from(vec![69]);
         let expected_player_2 =
             Player::new_with_cards(expected_player_2_controller, expected_player_2_cards);
+
         game.run_discard_round();
 
         assert_eq!(game.deck, Deck::new_with_cards(Vec::new()));
-        assert_eq!(game.dealer, expected_player_2);
-        assert_eq!(game.pone, expected_player_1);
+        assert_eq!(game.dealer, expected_player_1);
+        assert_eq!(game.pone, expected_player_2);
     }
 }
