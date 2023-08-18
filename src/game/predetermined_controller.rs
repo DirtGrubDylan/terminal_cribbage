@@ -45,9 +45,7 @@ impl Controller for PredeterminedController {
     /// assert_eq!(controller.get_card_index(&available_cards), Some(2));
     /// assert_eq!(controller.get_card_index(&available_cards), None);
     /// ```
-    fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize> {
-        let number_of_available_cards = available_cards.len();
-
+    fn get_card_index(&mut self, _available_cards: &[Card]) -> Option<usize> {
         self.card_indices.pop_front()
     }
 }
