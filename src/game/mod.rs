@@ -114,8 +114,6 @@ where
         //
         //     * swap dealer/pone
 
-        
-
         unimplemented!()
     }
 
@@ -168,10 +166,10 @@ where
         }
 
         let discards = vec![
-            self.dealer.remove_card().unwrap(),
+            self.pone.remove_card().unwrap(),
             self.dealer.remove_card().unwrap(),
             self.pone.remove_card().unwrap(),
-            self.pone.remove_card().unwrap(),
+            self.dealer.remove_card().unwrap(),
         ];
 
         let crib = Hand::from(discards);
@@ -451,10 +449,10 @@ mod tests {
             Card::new(Rank::King, Suit::Diamonds),
         ];
         let expected_player_1_crib = vec![
-            Card::new(Rank::Six, Suit::Hearts),
-            Card::new(Rank::Eight, Suit::Clubs),
             Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Hearts),
             Card::new(Rank::Six, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Clubs),
         ];
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new_with_cards_and_crib(
