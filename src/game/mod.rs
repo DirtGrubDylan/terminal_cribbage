@@ -63,7 +63,9 @@ where
 
     /// Play the full game.
     ///
-    /// The `should_shuffle` parameter is for testing.
+    /// The `reset_with_deck` parameter is for testing. If [`Some`], then instead of using
+    /// [`Game::reset_deck`] and shuffling, it will just set [`Game::deck`] to the given
+    /// [`Option<Deck>`].
     ///
     /// * Each player chooses a random card from deck. The highest value card wins,
     ///   and card suit order is hearts, spades, diamonds, clubs. The winner is the
@@ -81,7 +83,7 @@ where
     ///   put down a card gets to put down another card. This is until all cards are laid out
     /// * Afterwards the players hands/cribs are scored, with the starter card, starting with the Pone.
     /// * If neither players score is 121, then switch dealer and loop from dealing cards step.
-    pub fn play(&mut self, should_shuffle: bool) {
+    pub fn play(&mut self, reset_with_deck: Option<Deck>) {
         // make copies of players and deck for reset
         //
         // Choose dealer
