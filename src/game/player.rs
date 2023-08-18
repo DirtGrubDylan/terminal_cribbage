@@ -153,6 +153,29 @@ where
     ///
     /// let mut player = Player::new(controller);
     ///
+    /// assert!(!player.has_cards_in_hand());
+    ///
+    /// player.add_card(Card::new(Rank::Ace, Suit::Spades));
+    ///
+    /// assert!(player.has_cards_in_hand());
+    /// ```
+    pub fn has_cards_in_hand(&self) -> bool {
+        !self.hand.is_empty()
+    }
+
+    /// Indicates that the [`Player`] has [`Card`]s in [`Player::hand`], [`Player::crib`], or
+    /// [`Player::discarded`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
     /// assert!(!player.has_cards());
     ///
     /// player.add_card(Card::new(Rank::Ace, Suit::Spades));
@@ -160,7 +183,7 @@ where
     /// assert!(player.has_cards());
     /// ```
     pub fn has_cards(&self) -> bool {
-        !self.hand.is_empty()
+        !self.hand.is_empty() || !self.crib.is_empty() || !self.discarded.is_empty()
     }
 
     /// Chooses [`Card`] for the cut from given [`Deck`], which is removed from the [`Deck`].
@@ -340,15 +363,15 @@ where
     ///
     /// player.add_card(card.clone());
     ///
-    /// assert!(player.has_cards());
+    /// assert!(player.has_cards_in_hand());
     ///
     /// let _ = player.discard();
     ///
-    /// assert!(!player.has_cards());
+    /// assert!(!player.has_cards_in_hand());
     ///
     /// player.gather_discarded();
     ///
-    /// assert!(player.has_cards());
+    /// assert!(player.has_cards_in_hand());
     /// ```
     pub fn gather_discarded(&mut self) {
         for card in self.discarded.clone() {
@@ -649,16 +672,16 @@ mod tests {
     }
 
     #[test]
-    fn test_has_cards_false() {
+    fn test_has_cards_in_hand_false() {
         let controller = PredeterminedController::from(vec![0, 1, 2]);
 
         let player = Player::new(controller);
 
-        assert!(!player.has_cards());
+        assert!(!player.has_cards_in_hand());
     }
 
     #[test]
-    fn test_has_cards_true() {
+    fn test_has_cards_in_hand_true() {
         let card = Card::new(Rank::Ace, Suit::Spades);
 
         let controller = PredeterminedController::from(vec![0, 1, 2]);
@@ -667,7 +690,7 @@ mod tests {
 
         player.add_card(card);
 
-        assert!(player.has_cards());
+        assert!(player.has_cards_in_hand());
     }
 
     #[test]
@@ -786,11 +809,13 @@ mod tests {
 
         let _discards: Vec<Card> = (0..=2).map(|_| player.discard().unwrap()).collect();
 
-        assert!(!player.has_cards());
+        assert!(player.has_cards());
+        assert!(!player.has_cards_in_hand());
 
         player.gather_discarded();
 
         assert!(player.has_cards());
+        assert!(player.has_cards_in_hand());
         assert_eq!(player, expected);
     }
 }

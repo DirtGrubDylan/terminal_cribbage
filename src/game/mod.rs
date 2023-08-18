@@ -212,7 +212,7 @@ where
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
 
-        while self.dealer.has_cards() || self.pone.has_cards() {
+        while self.dealer.has_cards_in_hand() || self.pone.has_cards_in_hand() {
             match turn % 2 {
                 0 => play_data.play_once(&mut self.pone, &self.dealer),
                 1 => play_data.play_once(&mut self.dealer, &self.pone),
@@ -273,6 +273,13 @@ where
         remaining_deck_cards.push(starter);
 
         self.deck = Deck::new_with_cards(remaining_deck_cards);
+    }
+
+    /// Resets the [`Game::deck`] with a given [`Deck`].
+    ///
+    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and [`Crib`].
+    fn reset_deck_with(&mut self, deck: Deck) {
+        unimplemented!()
     }
 }
 
@@ -776,9 +783,6 @@ mod tests {
 
         let starter = Card::new(Rank::Eight, Suit::Diamonds);
 
-        // Hand Score 6pts: 15 2pts, 3-run 3pts, Nobs 1pt
-        // Crib Score 13pts: 15 4pts, 4-run 4pts, 5-flush 5pts
-        // Total Score 19pts
         let player_1_cards = vec![
             Card::new(Rank::Jack, Suit::Diamonds),
             Card::new(Rank::Seven, Suit::Clubs),
@@ -794,15 +798,13 @@ mod tests {
         let player_1 =
             Player::new_with_cards_and_crib(controller.clone(), player_1_cards, player_1_crib);
 
-        // Hand Score 12pts: 15 4pts, Pair 2pts, 2x 3-run 6pts
         let player_2_cards = vec![
             Card::new(Rank::Four, Suit::Clubs),
             Card::new(Rank::Six, Suit::Diamonds),
             Card::new(Rank::Seven, Suit::Diamonds),
             Card::new(Rank::Eight, Suit::Clubs),
         ];
-        let mut player_2 = Player::new_with_cards(controller, player_2_cards);
-        player_2.points = 110;
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
 
         let deck = Deck::new_with_cards(Vec::new());
         let mut game = Game::new_with_deck(player_1, player_2, deck);
@@ -827,5 +829,59 @@ mod tests {
         game.reset_deck(starter);
 
         assert_eq!(game.deck, expected_deck);
+    }
+
+    #[test]
+    fn test_game_reset_deck_with() {
+        let controller = PredeterminedController::from(Vec::new());
+
+        let player_1_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+        ];
+        let player_1_crib = vec![
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+        ];
+        let player_1 =
+            Player::new_with_cards_and_crib(controller.clone(), player_1_cards, player_1_crib);
+
+        let player_2_cards = vec![
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+        ];
+        let player_2 = Player::new_with_cards(controller, player_2_cards);
+
+        let deck = Deck::new_with_cards(Vec::new());
+        let mut game = Game::new_with_deck(player_1, player_2, deck);
+
+        let expected_deck_cards = vec![
+            Card::new(Rank::Jack, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Clubs),
+            Card::new(Rank::Queen, Suit::Diamonds),
+            Card::new(Rank::King, Suit::Diamonds),
+            Card::new(Rank::Ace, Suit::Diamonds),
+            Card::new(Rank::Two, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Diamonds),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Six, Suit::Diamonds),
+            Card::new(Rank::Seven, Suit::Diamonds),
+            Card::new(Rank::Eight, Suit::Clubs),
+            Card::new(Rank::Eight, Suit::Diamonds),
+        ];
+        let expected_deck = Deck::new_with_cards(expected_deck_cards);
+
+        game.reset_deck_with(expected_deck.clone());
+
+        assert_eq!(game.deck, expected_deck);
+        assert!(!game.dealer.has_cards());
+        assert!(!game.pone.has_cards());
     }
 }

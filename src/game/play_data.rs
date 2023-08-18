@@ -260,10 +260,12 @@ impl PlayData {
     ///
     /// // Player 1 got 1 points for a GO and has 1 less card in their hand.
     /// assert_eq!(player_1.points, 1);
-    /// assert!(!player_1.has_cards());
+    /// assert!(player_1.has_cards());
+    /// assert!(!player_1.has_cards_in_hand());
     /// // Player 2 cannot play after Player 1 not get to play
     /// assert_eq!(player_2.points, 0);
     /// assert!(player_2.has_cards());
+    /// assert!(player_2.has_cards_in_hand());
     /// ```
     pub fn play_once<C>(&mut self, player: &mut Player<C>, opponent: &Player<C>)
     where
