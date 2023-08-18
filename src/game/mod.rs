@@ -83,40 +83,49 @@ where
     ///   put down a card gets to put down another card. This is until all cards are laid out
     /// * Afterwards the players hands/cribs are scored, with the starter card, starting with the Pone.
     /// * If neither players score is 121, then switch dealer and loop from dealing cards step.
+    ///
+    /// # Panics
+    ///
+    /// If there have been 1,000 rounds, indicating that the game is broken and can't end loop.
     pub fn play(&mut self, reset_with_deck: Option<Deck>) {
-        // make copies of players and deck for reset
-        //
-        // Choose dealer
-        //
-        // game: while dealer.points != 121 || player.points != 121
-        //     * Shuffle Deck
-        //
-        //     * Flip starter
-        //         * If jack -> add 2pts to dealer
-        //
-        //     * If dealer has 121 -> break game
-        //
-        //     * play: while either player has cards in hand
-        //         * run play round
-        //             * players gather discarded back into hand
-        //
-        //     * if either player has 121 -> break game
-        //
-        //     * Run counting
-        //
-        //     * pone counts hand
-        //     * if pone has 121 -> break game;
-        //     * deal counts hand and crib
-        //     * if pone has 121 -> break game;
-        //
-        //     * reset deck
-        //         * drain players hands and crib to deck
-        //         * assert players hands/crib are empty
-        //         * assert deck is same size as last
-        //
-        //     * swap dealer/pone
+        let mut round = 0;
 
-        unimplemented!()
+        self.choose_dealer();
+
+        loop {
+            self.run_deal_and_discard_round();
+
+            let starter = self.get_starter();
+
+            if self.player_has_won() {
+                break;
+            }
+
+            self.run_play_round();
+
+            if self.player_has_won() {
+                break;
+            }
+
+            self.run_counting_round(&starter);
+
+            if self.player_has_won() {
+                break;
+            }
+
+            match reset_with_deck {
+                Some(ref deck) => self.reset_deck_with(deck.clone()),
+                None => self.reset_deck(starter),
+            }
+
+            self.swap_dealer_and_pone();
+
+            round += 1;
+
+            if 1_000 <= round {
+                panic!("Play got stuck at round 1000!");
+            }
+        }
     }
 
     /// Chose dealer and pone.
@@ -145,18 +154,25 @@ where
         }
     }
 
+    /// Indicates that the game is won by [`Deck::dealer`] or [`Deck::pone`].
+    ///
+    /// If either player has at least 121 points, the game is won for them.
+    fn player_has_won(&self) -> bool {
+        (121 <= self.dealer.points) || (121 <= self.pone.points)
+    }
+
     /// This method facilitates the [`Player`]s discarding for cribs.
     ///
     /// Each [`Player`] is dealt 6 [`Card`]s. Then [`Player`]s choose 2 [`Card`]s to discard.
     /// These [`Card`]s are put into a new [`Hand`], and given to the dealer [`Player`] as
-    /// their crib.
+    /// their crib. The dealer is dealt first even though that is wrong.
     ///
     /// # Panics
     ///
     /// * If there are not enough [`Card`]s in the deck to deal 12 [`Card`]s.
     /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
     ///
-    fn run_discard_round(&mut self) {
+    fn run_deal_and_discard_round(&mut self) {
         for _ in 0..6 {
             match (self.deck.deal(), self.deck.deal()) {
                 (Some(card_1), Some(card_2)) => {
@@ -168,10 +184,18 @@ where
         }
 
         let discards = vec![
-            self.pone.remove_card().unwrap(),
-            self.dealer.remove_card().unwrap(),
-            self.pone.remove_card().unwrap(),
-            self.dealer.remove_card().unwrap(),
+            self.pone
+                .remove_card()
+                .expect("Pone Controller has no moves for first discard!"),
+            self.dealer
+                .remove_card()
+                .expect("Dealer Controller has no moves for first discard!"),
+            self.pone
+                .remove_card()
+                .expect("Pone Controller has no moves for second discard!"),
+            self.dealer
+                .remove_card()
+                .expect("Dealer Controller has no moves for second discard!"),
         ];
 
         let crib = Hand::from(discards);
@@ -187,7 +211,10 @@ where
     ///
     /// If [`Deck`] is empty.
     fn get_starter(&mut self) -> Card {
-        let starter = self.deck.deal().unwrap();
+        let starter = self
+            .deck
+            .deal()
+            .expect("Could not get starter from empty deck!");
 
         if starter.rank == Rank::Jack {
             self.dealer.points += 2;
@@ -279,7 +306,18 @@ where
     ///
     /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and [`Crib`].
     fn reset_deck_with(&mut self, deck: Deck) {
-        unimplemented!()
+        self.deck = deck;
+
+        self.dealer.reset();
+        self.pone.reset();
+    }
+
+    /// Swaps [`Deck::dealer`] and [`Deck::pone`]
+    fn swap_dealer_and_pone(&mut self) {
+        let temp = self.dealer.clone();
+
+        self.dealer = self.pone.clone();
+        self.pone = temp;
     }
 }
 
@@ -423,7 +461,7 @@ mod tests {
     }
 
     #[test]
-    fn test_game_run_discard_round() {
+    fn test_game_run_deal_and_discard_round() {
         // Discard Six of Hearts and Eight of Clubs to crib
         let player_1_controller = PredeterminedController::from(vec![0, 3, 32]);
         let player_1 = Player::new(player_1_controller);
@@ -480,7 +518,7 @@ mod tests {
         let expected_player_2 =
             Player::new_with_cards(expected_player_2_controller, expected_player_2_cards);
 
-        game.run_discard_round();
+        game.run_deal_and_discard_round();
 
         assert_eq!(game.deck, Deck::new_with_cards(Vec::new()));
         assert_eq!(game.dealer, expected_player_1);
@@ -883,5 +921,108 @@ mod tests {
         assert_eq!(game.deck, expected_deck);
         assert!(!game.dealer.has_cards());
         assert!(!game.pone.has_cards());
+    }
+
+    #[test]
+    fn test_game_play() {
+        // The maximum number of points that can be scored in a single round by the dealer is 78.
+        //     * Pegging: 29pts
+        //     * Hand: 20pts
+        //     * Crib: 29pts
+        //
+        // This is achieved by dealing the following
+        //     * Pone: 3H, 3S, 4H, 4S, 5H, JC
+        //     * Dealer: 3D, 3C, 4D, 4C, 5S, 5D
+        //
+        // So the state after dealing, discarding, and getting the starter:
+        //     * Pone Hand: 3H, 3S, 4H, 4S
+        //         * Discarded/Removed: JC, 5H
+        //     * Dealer Hand: 3D, 3C, 4D, 4C
+        //         * Discarded/Removed: 5D, 5S
+        //         * Indices: 5, 4
+        //     * Dealer Crib: JC, 5D, 5H, 5S
+        //     * Starter Card: 5C
+        //         * Note: The Pone's Jack matches suit of the starter 5 (Clubs).
+        //     * So deck has to atleast be (in exact order):
+        //         * 5C, JC, 5D, 5H, 5S, 4S, 4C, 4H, 4D, 3S, 3C, 3H, 3D
+        //     * Both players removed indices: 5, 4
+        //
+        // Then the Pegging (for the 29 dealer score) would be:
+        //     * 3H(P,0), 3D(D,2), 3S(P,6), 3C(D,12), 4H(P,0), 4D(D,2), 4S(P,6), 4C(D,12),GO(D,1)
+        //     * (P,110), (D,112), (P,116), (D,124*) if P and D start w/ 110pts
+        //         * D = Dealer played.
+        //         * P = Pone played.
+        //         * # = Points earned.
+        //     * Dealer Scores: 29pts
+        //     * Pone Scores: 12pts
+        //     * Both players play indices: 0, 0, 0, 0
+        //
+        // Counting scores:
+        //     * Pone Hand: 3H, 3S, 4H, 4S, 5C (Starter)
+        //         * Score w/ Starter: 20pts
+        //             * 2x15s (4pts) + 2xPairs (4pts) + 4xrun-of-3 (12pts)
+        //     * Dealer Hand: 3D, 3C, 4D, 4C, 5C (Starter)
+        //         * Score w/ Starter: 20pts
+        //             * 2x15s (4pts) + 2xPairs (4pts) + 4xrun-of-3 (12pts)
+        //     * Dealer Crib: JC, 5D, 5H, 5S, 5C (Starter)
+        //         * Score w/ Starter: 29pts
+        //             * 8x15s (16pts) + 6xPairs (12pts) + Nobs (1pt)
+        //
+        // Total Points for Players:
+        //     * Pone: 32pts
+        //         * Peggings (12pts) + Hand (20pts)
+        //     * Dealer: 78pts
+        //         * Peggings (29pts) + Hand (20pts) + Crib (29pts)
+        //
+        // If deck is doesn't change between rounds, but dealers alternate:
+        //     * P1 chooses JC for cut, P2 chooses 5D for cut
+        //         * P1 wins and is first dealer
+        //     * Round 1 (P1 = Dealer, P2 = Pone):
+        //         * P1: 78pts
+        //         * P2: 32pts
+        //         * Both players chose indices for discarding and pegging: 5,4,0,0,0,0
+        //     * Round 2 (P1 = Pone, P2 = Dealer):
+        //         * P1: 110pts
+        //         * P2: 110pts
+        //         * Both players chose indices for discarding and pegging: 5,4,0,0,0,0
+        //     * Round 3 (P1 = Dealer, P2 = Pone):
+        //         * P1: 124pts
+        //         * P2: 116pts
+        //         * Both players chose indices for discarding and pegging: 5,4,0,0
+        //         * Game ends when dealers plays their 3C during pegging.
+        //     * For all rounds both players chose the following indices for discarding and pegging:
+        //         * 5,4,0,0,0,0,5,4,0,0,0,0,5,4,0,0
+        let controller =
+            PredeterminedController::from(vec![2, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0]);
+
+        let player_1 = Player::new(controller.clone());
+        let player_2 = Player::new(controller);
+
+        let deck_cards = vec![
+            Card::new(Rank::Five, Suit::Clubs),
+            Card::new(Rank::Jack, Suit::Clubs),
+            Card::new(Rank::Five, Suit::Diamonds),
+            Card::new(Rank::Five, Suit::Hearts),
+            Card::new(Rank::Five, Suit::Spades),
+            Card::new(Rank::Four, Suit::Spades),
+            Card::new(Rank::Four, Suit::Clubs),
+            Card::new(Rank::Four, Suit::Hearts),
+            Card::new(Rank::Four, Suit::Diamonds),
+            Card::new(Rank::Three, Suit::Spades),
+            Card::new(Rank::Three, Suit::Clubs),
+            Card::new(Rank::Three, Suit::Hearts),
+            Card::new(Rank::Three, Suit::Diamonds),
+        ];
+        let deck = Deck::new_with_cards(deck_cards);
+
+        let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
+
+        let expected_dealer_points = 124;
+        let expected_pone_points = 116;
+
+        game.play(Some(deck));
+
+        assert_eq!(game.dealer.points, expected_dealer_points);
+        assert_eq!(game.pone.points, expected_pone_points);
     }
 }

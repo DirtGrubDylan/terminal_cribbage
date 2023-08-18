@@ -344,7 +344,11 @@ where
     pub fn remove_card(&mut self) -> Option<Card> {
         self.controller
             .get_card_index(self.hand.as_vec())
-            .map(|index| self.hand.discard(index).unwrap())
+            .map(|index| {
+                self.hand.discard(index).expect(
+                    format!("Cannot grab index {} from hand {}", index, self.hand,).as_str(),
+                )
+            })
     }
 
     /// Adds all the [`Card`]s in [`Player::discarded`] to the [`Player::hand`].
@@ -554,8 +558,8 @@ where
 
         write!(
             f,
-            "Player: {{ Hand: {0}, Points: {1}, Discarded: [ {2} ] }}",
-            self.hand, self.points, discarded_str_joined
+            "Player: {{ Hand: {0}, Crib: {1}, Points: {2}, Discarded: [ {3} ] }}",
+            self.hand, self.crib, self.points, discarded_str_joined
         )
     }
 }
