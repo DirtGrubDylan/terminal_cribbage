@@ -401,7 +401,7 @@ where
         !self.crib.as_vec().is_empty()
     }
 
-    /// Removes all cards from [`Player::discarded`] and [`Player::hand`].
+    /// Removes all cards from [`Player::discarded`], [`Player::crib`], and [`Player::hand`].
     ///
     /// # Examples
     ///
@@ -460,11 +460,61 @@ where
         result.append(&mut self.crib.as_vec().clone());
         result.append(&mut self.discarded);
 
+        self.reset();
+
+        result
+    }
+
+    /// Resets all cards from [`Player::discarded`], [`Player::crib`], and [`Player::hand`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards_and_crib(controller, cards, crib);
+    ///
+    /// let expected_hand = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let expected_crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    /// let expected_discarded = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// let _ = player.discard();
+    ///
+    /// assert_eq!(player.hand.as_vec(), &expected_hand);
+    /// assert_eq!(player.crib.as_vec(), &expected_crib);
+    /// assert_eq!(player.discarded, expected_discarded);
+    ///
+    /// player.reset();
+    ///
+    /// assert_eq!(player.hand.len(), 0);
+    /// assert_eq!(player.crib.len(), 0);
+    /// assert!(player.discarded.is_empty());
+    /// ```
+    pub fn reset(&mut self) {
         self.hand = Hand::new();
         self.crib = Hand::new();
         self.discarded = Vec::new();
-
-        result
     }
 }
 
