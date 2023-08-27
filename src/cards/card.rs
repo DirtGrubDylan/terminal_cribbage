@@ -22,9 +22,9 @@ pub enum Rank {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Suit {
     Hearts,
-    Clubs,
-    Diamonds,
     Spades,
+    Diamonds,
+    Clubs,
 }
 
 /// [`Card`] is a struct that holds the [`Rank`] and [`Suit`] type of a playing card.

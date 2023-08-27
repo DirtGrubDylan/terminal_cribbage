@@ -29,7 +29,7 @@ impl Controller for PredeterminedController {
     ///
     /// # Examples
     ///
-    /// ```should_panic
+    /// ```
     /// use libterminal_cribbage::cards::{Card, Rank, Suit};
     /// use libterminal_cribbage::game::{Controller, PredeterminedController};
     ///
@@ -42,24 +42,11 @@ impl Controller for PredeterminedController {
     ///
     /// assert_eq!(controller.get_card_index(&available_cards), Some(0));
     /// assert_eq!(controller.get_card_index(&available_cards), Some(1));
-    ///
-    /// // Panics for index 3 being out of bounds.
-    /// controller.get_card_index(&available_cards);
+    /// assert_eq!(controller.get_card_index(&available_cards), Some(2));
+    /// assert_eq!(controller.get_card_index(&available_cards), None);
     /// ```
-    fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize> {
-        let number_of_available_cards = available_cards.len();
-
-        let possible_index = self.card_indices.pop_front();
-
-        if let Some(index) = possible_index {
-            assert!(
-                index < number_of_available_cards,
-                "Index {{{index}}}, from PredeterminedController, is out of bounds for available cards {:?}",
-                available_cards
-            );
-        }
-
-        possible_index
+    fn get_card_index(&mut self, _available_cards: &[Card]) -> Option<usize> {
+        self.card_indices.pop_front()
     }
 }
 

@@ -15,13 +15,13 @@ use game::Controller;
 /// during play.
 ///
 /// Points is self explainitory.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Player<C>
 where
     C: Controller,
 {
     controller: C,
-    discarded: Vec<Card>,
+    pub discarded: Vec<Card>,
     pub crib: Hand,
     pub hand: Hand,
     pub points: u32,
@@ -153,6 +153,29 @@ where
     ///
     /// let mut player = Player::new(controller);
     ///
+    /// assert!(!player.has_cards_in_hand());
+    ///
+    /// player.add_card(Card::new(Rank::Ace, Suit::Spades));
+    ///
+    /// assert!(player.has_cards_in_hand());
+    /// ```
+    pub fn has_cards_in_hand(&self) -> bool {
+        !self.hand.is_empty()
+    }
+
+    /// Indicates that the [`Player`] has [`Card`]s in [`Player::hand`], [`Player::crib`], or
+    /// [`Player::discarded`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let mut player = Player::new(controller);
+    ///
     /// assert!(!player.has_cards());
     ///
     /// player.add_card(Card::new(Rank::Ace, Suit::Spades));
@@ -160,7 +183,7 @@ where
     /// assert!(player.has_cards());
     /// ```
     pub fn has_cards(&self) -> bool {
-        !self.hand.is_empty()
+        !self.hand.is_empty() || !self.crib.is_empty() || !self.discarded.is_empty()
     }
 
     /// Chooses [`Card`] for the cut from given [`Deck`], which is removed from the [`Deck`].
@@ -188,21 +211,19 @@ where
     ///
     /// let result = player.choose_card_for_cut(&mut deck);
     ///
-    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Clubs)));
+    /// assert_eq!(result, Some(Card::new(Rank::King, Suit::Hearts)));
     /// assert_eq!(deck.as_vec().len(), 51);
     /// ```
     #[must_use]
     pub fn choose_card_for_cut(&mut self, deck: &mut Deck) -> Option<Card> {
-        let possible_card = self
-            .controller
+        // Handle stdin here. Only print input if not using stdin.
+        // Maybe Controller has a method `uses_stdin`?
+        // Also, put this into Player
+        // print!("Choose Card to Cut from Hand (0 to 51): ");
+
+        self.controller
             .get_card_index(deck.as_vec())
-            .map(|index| deck.remove(index).unwrap());
-
-        if let Some(card) = possible_card.clone() {
-            self.discarded.push(card);
-        }
-
-        possible_card
+            .map(|index| deck.remove(index).unwrap())
     }
 
     /// Discards, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
@@ -290,7 +311,6 @@ where
         self.discarded.last()
     }
 
-
     /// Removes, and returns, a [`Card`] from [`Player::hand`] if there are cards to remove.
     ///
     /// This [`Card`] is determined by the [`Player::controller`].
@@ -324,7 +344,11 @@ where
     pub fn remove_card(&mut self) -> Option<Card> {
         self.controller
             .get_card_index(self.hand.as_vec())
-            .map(|index| self.hand.discard(index).unwrap())
+            .map(|index| {
+                self.hand.discard(index).unwrap_or_else(|_| {
+                    panic!("Cannot grab index {} from hand {}", index, self.hand)
+                })
+            })
     }
 
     /// Adds all the [`Card`]s in [`Player::discarded`] to the [`Player::hand`].
@@ -343,18 +367,21 @@ where
     ///
     /// player.add_card(card.clone());
     ///
-    /// assert!(player.has_cards());
+    /// assert!(player.has_cards_in_hand());
     ///
     /// let _ = player.discard();
     ///
-    /// assert!(!player.has_cards());
+    /// assert!(!player.has_cards_in_hand());
     ///
     /// player.gather_discarded();
     ///
-    /// assert!(player.has_cards());
+    /// assert!(player.has_cards_in_hand());
     /// ```
     pub fn gather_discarded(&mut self) {
-        self.hand = Hand::from(self.discarded.clone());
+        for card in self.discarded.clone() {
+            self.hand.add_card(card);
+        }
+
         self.discarded = Vec::new();
     }
 
@@ -383,7 +410,7 @@ where
         self.hand.as_vec().iter().any(|card| card.score() <= value)
     }
 
-    /// Indicats if [`Player`] has a non-empty crib.
+    /// Indicats if [`Player::crib`] is not empty.
     ///
     /// # Examples
     ///
@@ -400,6 +427,124 @@ where
     pub fn has_crib(&self) -> bool {
         !self.crib.as_vec().is_empty()
     }
+
+    /// Removes all cards from [`Player::discarded`], [`Player::crib`], and [`Player::hand`].
+    ///
+    /// The order is [`Player::hand`], [`Player::crib`], and [`Player::discarded`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards_and_crib(controller, cards, crib);
+    ///
+    /// let expected_hand = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let expected_crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    /// let expected_discarded = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// let _ = player.discard();
+    ///
+    /// assert_eq!(player.hand.as_vec(), &expected_hand);
+    /// assert_eq!(player.crib.as_vec(), &expected_crib);
+    /// assert_eq!(player.discarded, expected_discarded);
+    ///
+    /// let expected_removed = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// assert_eq!(player.remove_all(), expected_removed);
+    /// assert_eq!(player.hand.len(), 0);
+    /// assert_eq!(player.crib.len(), 0);
+    /// assert!(player.discarded.is_empty());
+    /// ```
+    pub fn remove_all(&mut self) -> Vec<Card> {
+        let mut result = self.hand.as_vec().clone();
+
+        result.append(&mut self.crib.as_vec().clone());
+        result.append(&mut self.discarded);
+
+        self.reset();
+
+        result
+    }
+
+    /// Resets all cards from [`Player::discarded`], [`Player::crib`], and [`Player::hand`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Rank, Suit};
+    /// use libterminal_cribbage::game::{Player, PredeterminedController};
+    ///
+    /// let cards = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 0]);
+    ///
+    /// let mut player = Player::new_with_cards_and_crib(controller, cards, crib);
+    ///
+    /// let expected_hand = vec![
+    ///     Card::new(Rank::Ace, Suit::Spades),
+    ///     Card::new(Rank::Ace, Suit::Clubs),
+    /// ];
+    /// let expected_crib = vec![
+    ///     Card::new(Rank::Two, Suit::Spades),
+    ///     Card::new(Rank::Two, Suit::Clubs),
+    /// ];
+    /// let expected_discarded = vec![
+    ///     Card::new(Rank::Ace, Suit::Hearts),
+    /// ];
+    ///
+    /// let _ = player.discard();
+    ///
+    /// assert_eq!(player.hand.as_vec(), &expected_hand);
+    /// assert_eq!(player.crib.as_vec(), &expected_crib);
+    /// assert_eq!(player.discarded, expected_discarded);
+    ///
+    /// player.reset();
+    ///
+    /// assert_eq!(player.hand.len(), 0);
+    /// assert_eq!(player.crib.len(), 0);
+    /// assert!(player.discarded.is_empty());
+    /// ```
+    pub fn reset(&mut self) {
+        self.hand = Hand::new();
+        self.crib = Hand::new();
+        self.discarded = Vec::new();
+    }
 }
 
 impl<C> fmt::Display for Player<C>
@@ -407,12 +552,16 @@ where
     C: Controller,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let discarded_str_joined = self.discarded.iter().map(std::string::ToString::to_string).join(",");
+        let discarded_str_joined = self
+            .discarded
+            .iter()
+            .map(std::string::ToString::to_string)
+            .join(",");
 
         write!(
             f,
-            "Player: {{ Hand: {0}, Points: {1}, Discarded: [ {2} ] }}",
-            self.hand, self.points, discarded_str_joined
+            "Player: {{ Hand: {0}, Crib: {1}, Points: {2}, Discarded: [ {3} ] }}",
+            self.hand, self.crib, self.points, discarded_str_joined
         )
     }
 }
@@ -529,16 +678,16 @@ mod tests {
     }
 
     #[test]
-    fn test_has_cards_false() {
+    fn test_has_cards_in_hand_false() {
         let controller = PredeterminedController::from(vec![0, 1, 2]);
 
         let player = Player::new(controller);
 
-        assert!(!player.has_cards());
+        assert!(!player.has_cards_in_hand());
     }
 
     #[test]
-    fn test_has_cards_true() {
+    fn test_has_cards_in_hand_true() {
         let card = Card::new(Rank::Ace, Suit::Spades);
 
         let controller = PredeterminedController::from(vec![0, 1, 2]);
@@ -547,7 +696,7 @@ mod tests {
 
         player.add_card(card);
 
-        assert!(player.has_cards());
+        assert!(player.has_cards_in_hand());
     }
 
     #[test]
@@ -666,11 +815,13 @@ mod tests {
 
         let _discards: Vec<Card> = (0..=2).map(|_| player.discard().unwrap()).collect();
 
-        assert!(!player.has_cards());
+        assert!(player.has_cards());
+        assert!(!player.has_cards_in_hand());
 
         player.gather_discarded();
 
         assert!(player.has_cards());
+        assert!(player.has_cards_in_hand());
         assert_eq!(player, expected);
     }
 }

@@ -10,7 +10,7 @@ use cards::card::Rank;
 /// The [`Hand`] struct is a wrapper for a vector of [`Card`]s.
 ///
 /// This wrapper is so the vector can be treated like an actual hand of [`Card`]s
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Hand(Vec<Card>);
 
 impl Hand {
@@ -234,7 +234,11 @@ impl Default for Hand {
 
 impl fmt::Display for Hand {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let cards_str_joined = self.0.iter().map(std::string::ToString::to_string).join(",");
+        let cards_str_joined = self
+            .0
+            .iter()
+            .map(std::string::ToString::to_string)
+            .join(",");
 
         write!(formatter, "[ {cards_str_joined} ]")
     }
