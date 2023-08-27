@@ -167,7 +167,11 @@ impl Default for Deck {
 
 impl fmt::Display for Deck {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let cards_str_joined = self.0.iter().map(std::string::ToString::to_string).join(",");
+        let cards_str_joined = self
+            .0
+            .iter()
+            .map(std::string::ToString::to_string)
+            .join(",");
 
         write!(formatter, "[ {cards_str_joined} ]")
     }
@@ -208,9 +212,7 @@ mod test {
         assert!(test_deck
             .0
             .starts_with(&[Card::new(Rank::Ace, Suit::Hearts)]));
-        assert!(test_deck
-            .0
-            .ends_with(&[Card::new(Rank::King, Suit::Clubs)]));
+        assert!(test_deck.0.ends_with(&[Card::new(Rank::King, Suit::Clubs)]));
         assert_eq!(test_deck.0.len(), 52);
     }
 

@@ -1,11 +1,11 @@
 //! This module holds the logic for the gameplay:
 //! * Choose dealer
-//! * Deal hands to players
-//! * Discards from players for dealer crib
-//! * Get starter card from deck
+//! * Deal [`Hand`]s to [`Player`]s
+//! * Discards from [`Player`]s for dealer crib
+//! * Get starter [`Card`] from [`Deck`]
 //! * Play (peg)
-//! * Count hands
-//! * Repeat until one player reaches 121pts
+//! * Count [`Hand`]s
+//! * Repeat until one [`Player`] reaches 121pts
 
 mod controller;
 mod display;
@@ -19,9 +19,12 @@ pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
 
+#[cfg(doc)]
+use crate::cards::Suit;
+
 use crate::cards::{Card, Deck, Hand, Rank};
 
-/// The actual game!
+/// The struct holding all the necessary data for playing a game of cribbage.
 #[derive(Debug, PartialEq)]
 pub struct Game<C>
 where
@@ -38,6 +41,21 @@ where
     C: Controller + Clone + std::fmt::Debug,
 {
     /// Creates a new [`Game`] with given [`Player`]s.
+    ///
+    /// The [`Deck`] is created with the [`Deck::new`] function, and then shuffled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let game = Game::new(player_1, player_2);
+    /// ```
     pub fn new(player_1: Player<C>, player_2: Player<C>) -> Game<C> {
         let mut deck = Deck::new();
 
@@ -52,6 +70,29 @@ where
     }
 
     /// Creates a new [`Game`] with given [`Player`]s and [`Deck`].
+    ///
+    /// This is intended to be used for testing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let deck_cards = vec![
+    ///     Card::new(Rank::Five, Suit::Clubs),
+    ///     Card::new(Rank::Four, Suit::Diamonds),
+    ///     Card::new(Rank::Three, Suit::Hearts),
+    /// ];
+    /// let deck = Deck::new_with_cards(deck_cards);
+    ///
+    /// let game = Game::new_with_deck(player_1, player_2, deck.clone());
+    /// ```
     pub fn new_with_deck(player_1: Player<C>, player_2: Player<C>, deck: Deck) -> Game<C> {
         Game {
             dealer: player_1,
@@ -61,33 +102,64 @@ where
         }
     }
 
+    /// Play the default game.
+    ///
+    /// This is simply calls [`Game::play`], but with `reset_with_deck` set to [`None`].
+    ///
+    /// # Panics
+    ///
+    /// * If there have been 1,000 rounds, indicating that the game is broken and can't end loop.
+    /// * If the [`Player::controller`] returns an index that is out of bounds of the [`Deck`].
+    ///
+    /// # Examples
+    ///
+    /// ```should_panic
+    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let mut game = Game::new(player_1, player_2);
+    ///
+    /// // Panics because the controller does not have enough moves to play a game.
+    /// game.play_default();
+    /// ```
+    pub fn play_default(&mut self) {
+        self.play(&None);
+    }
+
     /// Play the full game.
     ///
     /// The `reset_with_deck` parameter is for testing. If [`Some`], then instead of using
     /// [`Game::reset_deck`] and shuffling, it will just set [`Game::deck`] to the given
     /// [`Option<Deck>`].
     ///
-    /// * Each player chooses a random card from deck. The highest value card wins,
-    ///   and card suit order is hearts, spades, diamonds, clubs. The winner is the
-    ///   dealer who gets the crib.
-    /// * The deck is shuffled and each player is dealt 6 cards.
-    /// * The players choose 2 cards to discard. These cards are put into a new hand,
-    ///   and given to the dealer player as their crib.
-    /// * The top of the deck is popped and stored as the starter card.
-    /// * If this card is a jack, the dealer gets two points.
-    /// * Starting with the non-dealer (Pone) each player puts a card from his hand
-    ///   on the stack (maybe indicate which player put down the card?) And the score
-    ///   is counted incrementally. All players must play as long as the running score
-    ///   is not 31 or over. If one player can't make a move, they pass (GO) to the next payer.
-    ///   If both can't make a move, the running score is reset to zero, and the last player to
-    ///   put down a card gets to put down another card. This is until all cards are laid out
-    /// * Afterwards the players hands/cribs are scored, with the starter card, starting with the Pone.
-    /// * If neither players score is 121, then switch dealer and loop from dealing cards step.
+    /// How the play works:
+    /// * Each [`Player`] chooses a random [`Card`] from [`Deck`]. The highest value [`Card`] wins,
+    ///   and [`Card`] suit order is [`Suit::Hearts`], [`Suit::Spades`], [`Suit::Diamonds`],
+    ///   [`Suit::Clubs`]. The winner is the dealer who gets the crib.
+    /// * The [`Deck`] is shuffled and each [`Player`] is dealt 6 [`Card`]s.
+    /// * The [`Player`]s choose 2 [`Card`]s to discard. These [`Card`]s are put into a new
+    ///   [`Hand`], and given to the dealer [`Player`] as their crib.
+    /// * The top of the [`Deck`] is popped and stored as the starter [`Card`].
+    /// * If this [`Card`] is a [`Rank::Jack`], the dealer gets two points.
+    /// * Starting with the non-dealer (Pone) each [`Player`] puts a [`Card`] from their [`Hand`]
+    ///   on the stack and the score is counted incrementally. All [`Player`]s must play as long as
+    ///   the running score is not 31 or over. If one [`Player`] can't make a move, they pass (GO)
+    ///   to the next [`Player`]. If both can't make a move, the running score is reset to zero, and
+    ///   the last [`Player`] to put down a [`Card`] gets to put down another [`Card`]. This is
+    ///   until all [`Card`]s are laid out.
+    /// * Afterwards the [`Player`]s [`Hand`]s/cribs are scored, with the starter [`Card`], starting
+    ///   with the Pone.
+    /// * If neither [`Player`]s score is 121, then switch dealer and loop from dealing [`Card`]s
+    ///   step.
     ///
     /// # Panics
     ///
     /// If there have been 1,000 rounds, indicating that the game is broken and can't end loop.
-    pub fn play(&mut self, reset_with_deck: Option<Deck>) {
+    fn play(&mut self, reset_with_deck: &Option<Deck>) {
         let mut round = 0;
 
         self.choose_dealer();
@@ -122,23 +194,21 @@ where
 
             round += 1;
 
-            if 1_000 <= round {
-                panic!("Play got stuck at round 1000!");
-            }
+            assert!(1_000 >= round, "Play got stuck at round 1000!");
         }
     }
 
     /// Chose dealer and pone.
     ///
-    /// This is done by having each player choose a [`Card`] from the [`Deck`]
+    /// This is done by having each [`Player`] choose a [`Card`] from the [`Deck`]
     /// and the dealer is the highest value [`Card`].
-    /// * The highest value card wins.
-    /// * Card suit order is Hearts, Spades, Diamonds, Clubs.
+    /// * The highest value [`Card`] wins.
+    /// * Card suit order is [`Suit::Hearts`], [`Suit::Spades`], [`Suit::Diamonds`],
+    ///   [`Suit::Clubs`].
     ///
     /// # Panics
     ///
-    /// If the [`Player::controller`] returns an index that is out of bounds of the
-    /// [`Deck`].
+    /// If the [`Player::controller`] returns an index that is out of bounds of the [`Deck`].
     fn choose_dealer(&mut self) {
         let mut temp_deck = self.deck.clone();
 
@@ -156,7 +226,7 @@ where
 
     /// Indicates that the game is won by [`Deck::dealer`] or [`Deck::pone`].
     ///
-    /// If either player has at least 121 points, the game is won for them.
+    /// If either [`Player`] has at least 121 points, the game is won for them.
     fn player_has_won(&self) -> bool {
         (121 <= self.dealer.points) || (121 <= self.pone.points)
     }
@@ -169,7 +239,7 @@ where
     ///
     /// # Panics
     ///
-    /// * If there are not enough [`Card`]s in the deck to deal 12 [`Card`]s.
+    /// * If there are not enough [`Card`]s in the [`Deck`] to deal 12 [`Card`]s.
     /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
     ///
     fn run_deal_and_discard_round(&mut self) {
@@ -203,7 +273,7 @@ where
         self.dealer.crib = crib;
     }
 
-    /// Return starter [`Card`], which is the card at the top of the [`Deck`].
+    /// Return starter [`Card`], which is the [`Card`] at the top of the [`Deck`].
     ///
     /// If the starter is a [`Rank::Jack`], give 2 points to the dealer.
     ///
@@ -225,16 +295,17 @@ where
 
     /// This method facilitates the play round.
     ///
-    /// Starting with the non-dealer (Pone) each player puts a card from his hand
-    /// on the stack (maybe indicate which player put down the card?) And the score
-    /// is counted incrementally. All players must play as long as the running score
-    /// is not 31 or over. If one player can't make a move, they pass (GO) to the next payer.
-    /// If both can't make a move, the running score is reset to zero, and the last player to
-    /// put down a card gets to put down another card. This is until all cards are laid out
+    /// Starting with the non-dealer (Pone) each [`Player`] puts a [`Card`] from his [`Hand`]
+    /// on the stack and the score is counted incrementally. All [`Player`]s must play as long as
+    /// the running score is not 31 or over. If one [`Player`] can't make a move, they pass (GO) to
+    /// the next [`Player`]. If both can't make a move, the running score is reset to zero, and the
+    /// last [`Player`] to put down a [`Card`] gets to put down another [`Card`]. This is until all
+    /// [`Card`]s are laid out
     ///
     /// # Panics
     ///
-    /// If something goes wrong with counting turns or if this method exceeded 100 turns.
+    /// * If something goes wrong with counting turns or if this method exceeded 100 turns.
+    /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
     fn run_play_round(&mut self) {
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
@@ -257,12 +328,14 @@ where
             }
 
             // Panic if too many turns has taken place.
-            if 100 <= turn {
-                panic!(
-                    "Too many turns!\nTurn: {}\nPlayData: {:?}\nDealer: {:?}\nPone: {:?}",
-                    turn, play_data, self.dealer, self.pone
-                );
-            }
+            assert!(
+                100 >= turn,
+                "Too many turns!\nTurn: {}\nPlayData: {:?}\nDealer: {:?}\nPone: {:?}",
+                turn,
+                play_data,
+                self.dealer,
+                self.pone
+            );
         }
 
         self.dealer.gather_discarded();
@@ -271,7 +344,8 @@ where
 
     /// This method facilitates the scoring round.
     ///
-    /// The players hands/cribs are scored, with the starter card, starting with the Pone.
+    /// The [`Player`]s [`Hand`]s/cribs are scored, with the starter [`Card`], starting with the
+    /// Pone.
     fn run_counting_round(&mut self, starter: &Card) {
         self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
 
@@ -285,11 +359,11 @@ where
 
     /// Resets the [`Deck`].
     ///
-    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and [`Crib`].
-    /// In addition to adding back in the starter card.
+    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and
+    /// [`Player::crib`]. In addition to adding back in the starter [`Card`].
     ///
     /// Theoretically, this should be fine since all the [`Card`]s that the [`Player`]s have
-    /// came from the deck. Same goes for the starter.
+    /// came from the [`Deck`]. Same goes for the starter.
     fn reset_deck(&mut self, starter: Card) {
         let mut remaining_deck_cards = self.deck.as_vec().clone();
 
@@ -304,7 +378,8 @@ where
 
     /// Resets the [`Game::deck`] with a given [`Deck`].
     ///
-    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and [`Crib`].
+    /// This will drain all the [`Card`]s from the dealer's and pone's [`Hand`] and
+    /// [`Player::crib`].
     fn reset_deck_with(&mut self, deck: Deck) {
         self.deck = deck;
 
@@ -671,7 +746,7 @@ mod tests {
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
 
-        // assert that the hands were reset
+        // assert that the [`Hand`]s were reset
         assert_eq!(game.dealer.hand.as_vec().len(), 4);
         assert_eq!(game.pone.hand.as_vec().len(), 4);
         assert!(game.dealer.discarded.is_empty());
@@ -1020,7 +1095,7 @@ mod tests {
         let expected_dealer_points = 124;
         let expected_pone_points = 116;
 
-        game.play(Some(deck));
+        game.play(&Some(deck));
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);

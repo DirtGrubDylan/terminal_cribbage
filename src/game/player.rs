@@ -410,7 +410,7 @@ where
         self.hand.as_vec().iter().any(|card| card.score() <= value)
     }
 
-    /// Indicats if [`Player`] has a non-empty crib.
+    /// Indicats if [`Player::crib`] is not empty.
     ///
     /// # Examples
     ///
@@ -429,6 +429,8 @@ where
     }
 
     /// Removes all cards from [`Player::discarded`], [`Player::crib`], and [`Player::hand`].
+    ///
+    /// The order is [`Player::hand`], [`Player::crib`], and [`Player::discarded`].
     ///
     /// # Examples
     ///
