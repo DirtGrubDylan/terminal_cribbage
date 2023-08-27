@@ -345,9 +345,9 @@ where
         self.controller
             .get_card_index(self.hand.as_vec())
             .map(|index| {
-                self.hand.discard(index).expect(
-                    format!("Cannot grab index {} from hand {}", index, self.hand,).as_str(),
-                )
+                self.hand.discard(index).unwrap_or_else(|_| {
+                    panic!("Cannot grab index {} from hand {}", index, self.hand)
+                })
             })
     }
 
