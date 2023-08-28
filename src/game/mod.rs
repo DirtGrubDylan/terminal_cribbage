@@ -414,11 +414,23 @@ where
         self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
 
         if 121 <= self.pone.points {
+            let print_message =
+                self.display
+                    .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+
+            self.display.println(print_message);
+
             return;
         }
 
         self.dealer.points += self.dealer.hand.total(starter, /*is_crib=*/ false);
         self.dealer.points += self.dealer.crib.total(starter, /*is_crib=*/ true);
+
+        let print_message =
+            self.display
+                .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+
+        self.display.println(print_message);
     }
 
     /// Resets the [`Deck`].

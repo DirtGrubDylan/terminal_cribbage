@@ -353,6 +353,23 @@ impl Display {
         result.join(&self.joiner)
     }
 
+    /// The [`String`] display for game over.
+    pub fn game_over_to_string(&self, player_won: bool) -> String {
+        let mut result = Vec::new();
+
+        result.push(Self::spacer());
+
+        if player_won {
+            result.push("You Won!");
+        } else {
+            result.push("You Lost!");
+        }
+
+        result.push(Self::spacer());
+
+        result.join(&self.joiner)
+    }
+
     /// The display [`String`] representation of a [`Option<&Card>`].
     fn card_string(possible_card: Option<&Card>) -> String {
         match possible_card {
