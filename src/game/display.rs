@@ -360,9 +360,9 @@ impl Display {
         result.push(Self::spacer());
 
         if player_won {
-            result.push("You Won!");
+            result.push("You Won!".to_string());
         } else {
-            result.push("You Lost!");
+            result.push("You Lost!".to_string());
         }
 
         result.push(Self::spacer());

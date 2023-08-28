@@ -216,6 +216,10 @@ where
 
             assert!(1_000 >= round, "Play got stuck at round 1000!");
         }
+
+        let dealer_won = self.dealer.points >= 121;
+
+        self.display.println(self.display.game_over_to_string(dealer_won));
     }
 
     /// Chose dealer and pone.
