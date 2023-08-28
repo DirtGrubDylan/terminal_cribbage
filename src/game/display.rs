@@ -161,7 +161,7 @@ impl Display {
 
     /// Print given message to `std::out` using [`thread::sleep`] with a delay after printing.
     pub fn println(&self, message: String) {
-        println!("{message}");
+        println!("\n{message}");
 
         thread::sleep(self.post_print_delay_millis);
     }
