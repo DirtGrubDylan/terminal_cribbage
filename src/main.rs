@@ -1,11 +1,9 @@
 extern crate libterminal_cribbage;
 
-use std::io;
-
 use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
 use libterminal_cribbage::game::{Game, Player, PredeterminedController};
 
-fn main() -> io::Result<()> {
+fn main() {
     let controller =
         PredeterminedController::from(vec![2, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0]);
 
@@ -31,7 +29,7 @@ fn main() -> io::Result<()> {
 
     let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
-    game.play(&Some(deck));
+    game.should_print(true);
 
-    Ok(())
+    game.play(&Some(deck));
 }

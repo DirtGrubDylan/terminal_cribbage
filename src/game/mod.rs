@@ -102,6 +102,26 @@ where
         }
     }
 
+    /// Turns on printing for [`Diplay`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let mut game = Game::new(player_1, player_2);
+    ///
+    /// game.should_print(true);
+    /// ```
+    pub fn should_print(&mut self, should_print: bool) {
+        self.display.turn_on_printing(should_print);
+    }
+
     /// Play the default game.
     ///
     /// This is simply calls [`Game::play`], but with `reset_with_deck` set to [`None`].
@@ -173,7 +193,7 @@ where
                 break;
             }
 
-            self.run_play_round();
+            self.run_play_round(&starter);
 
             if self.player_has_won() {
                 break;
@@ -196,6 +216,11 @@ where
 
             assert!(1_000 >= round, "Play got stuck at round 1000!");
         }
+
+        let dealer_won = self.dealer.points >= 121;
+
+        self.display
+            .println(&self.display.game_over_to_string(dealer_won));
     }
 
     /// Chose dealer and pone.
@@ -217,7 +242,7 @@ where
 
         let dealer_won = dealer_chosen_card > pone_chosen_card;
 
-        self.display.println(self.display.game_after_cut(
+        self.display.println(&self.display.game_after_cut_to_string(
             &dealer_chosen_card,
             &pone_chosen_card,
             dealer_won,
@@ -261,20 +286,34 @@ where
             }
         }
 
-        let discards = vec![
-            self.pone
-                .remove_card()
-                .expect("Pone Controller has no moves for first discard!"),
-            self.dealer
-                .remove_card()
-                .expect("Dealer Controller has no moves for first discard!"),
-            self.pone
-                .remove_card()
-                .expect("Pone Controller has no moves for second discard!"),
-            self.dealer
-                .remove_card()
-                .expect("Dealer Controller has no moves for second discard!"),
-        ];
+        let mut discards = vec![];
+
+        for _ in 0..2 {
+            self.display
+                .println(&self.display.game_before_play_to_string(
+                    /*starter=*/ None,
+                    &self.dealer,
+                    &self.pone,
+                ));
+
+            discards.push(
+                self.pone
+                    .remove_card()
+                    .expect("Pone Controller has no moves for first discard!"),
+            );
+            discards.push(
+                self.dealer
+                    .remove_card()
+                    .expect("Dealer Controller has no moves for first discard!"),
+            );
+        }
+
+        self.display
+            .println(&self.display.game_before_play_to_string(
+                /*starter=*/ None,
+                &self.dealer,
+                &self.pone,
+            ));
 
         let crib = Hand::from(discards);
 
@@ -298,6 +337,13 @@ where
             self.dealer.points += 2;
         }
 
+        self.display
+            .println(&self.display.game_before_play_to_string(
+                Some(&starter),
+                &self.dealer,
+                &self.pone,
+            ));
+
         starter
     }
 
@@ -314,11 +360,20 @@ where
     ///
     /// * If something goes wrong with counting turns or if this method exceeded 100 turns.
     /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
-    fn run_play_round(&mut self) {
+    fn run_play_round(&mut self, starter: &Card) {
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
 
         while self.dealer.has_cards_in_hand() || self.pone.has_cards_in_hand() {
+            let print_message = self.display.game_during_play_to_string(
+                starter,
+                &self.dealer,
+                &self.pone,
+                &play_data,
+            );
+
+            self.display.println(&print_message);
+
             match turn % 2 {
                 0 => play_data.play_once(&mut self.pone, &self.dealer),
                 1 => play_data.play_once(&mut self.dealer, &self.pone),
@@ -346,6 +401,12 @@ where
             );
         }
 
+        let print_message =
+            self.display
+                .game_during_play_to_string(starter, &self.dealer, &self.pone, &play_data);
+
+        self.display.println(&print_message);
+
         self.dealer.gather_discarded();
         self.pone.gather_discarded();
     }
@@ -358,11 +419,23 @@ where
         self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
 
         if 121 <= self.pone.points {
+            let print_message =
+                self.display
+                    .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+
+            self.display.println(&print_message);
+
             return;
         }
 
         self.dealer.points += self.dealer.hand.total(starter, /*is_crib=*/ false);
         self.dealer.points += self.dealer.crib.total(starter, /*is_crib=*/ true);
+
+        let print_message =
+            self.display
+                .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+
+        self.display.println(&print_message);
     }
 
     /// Resets the [`Deck`].
@@ -429,7 +502,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new(expected_player_1_controller);
@@ -462,7 +535,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new(expected_player_1_controller);
@@ -495,7 +568,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new(expected_player_1_controller);
@@ -528,7 +601,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
         let expected_player_1_controller = PredeterminedController::from(vec![32]);
         let expected_player_1 = Player::new(expected_player_1_controller);
@@ -570,7 +643,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck);
 
         let expected_player_1_cards = vec![
             Card::new(Rank::Jack, Suit::Diamonds),
@@ -635,7 +708,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck);
 
         let expected_deck_cards = vec![
             Card::new(Rank::Eight, Suit::Diamonds),
@@ -688,7 +761,7 @@ mod tests {
         ];
         let deck = Deck::new_with_cards(deck_cards);
 
-        let mut game = Game::new_with_deck(player_1.clone(), player_2.clone(), deck.clone());
+        let mut game = Game::new_with_deck(player_1, player_2, deck);
 
         let expected_deck_cards = vec![
             Card::new(Rank::Eight, Suit::Diamonds),
@@ -723,6 +796,7 @@ mod tests {
         //     * Stack 3 -> KD(p1, 0pt, 10), GO (p1, 1pt, 10)
         //
         // Score at end: p1 = 4 (pair and 2 GOs), p2 = 4 (run of 3 and a GO)
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
 
         // Discard: 7C, JD, QD, KD
         let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
@@ -749,7 +823,7 @@ mod tests {
         let expected_dealer_points = 4;
         let expected_pone_points = 4;
 
-        game.run_play_round();
+        game.run_play_round(&starter);
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
@@ -769,6 +843,7 @@ mod tests {
         //     * p1 hit 121 break
         //
         // Score at end: p1 = 120 (pair), p2 = 124 (run of 3 and a GO)
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
 
         // Discard: 7C, JD, QD, KD
         let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
@@ -797,7 +872,7 @@ mod tests {
         let expected_dealer_points = 120;
         let expected_pone_points = 124;
 
-        game.run_play_round();
+        game.run_play_round(&starter);
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);

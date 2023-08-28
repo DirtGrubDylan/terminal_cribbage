@@ -146,6 +146,7 @@ use crate::game::{Controller, PlayData, Player};
 #[derive(Debug, PartialEq, Clone)]
 pub struct Display {
     pub joiner: String,
+    should_print: bool,
     post_print_delay_millis: time::Duration,
 }
 
@@ -155,19 +156,28 @@ impl Display {
     pub fn new() -> Display {
         Display {
             joiner: String::from("\n"),
+            should_print: false,
             post_print_delay_millis: time::Duration::from_millis(500),
         }
     }
 
-    /// Print given message to std::out using [`thread::sleep`] with a delay after printing.
-    pub fn println(&self, message: String) {
-        println!("{message}");
+    /// Turns on printing for [`Diplay`].
+    pub fn turn_on_printing(&mut self, should_print: bool) {
+        self.should_print = should_print;
+    }
 
-        thread::sleep(self.post_print_delay_millis);
+    /// Print given message to `std::out` using [`thread::sleep`] with a delay after printing.
+    pub fn println(&self, message: &str) {
+        if self.should_print {
+            println!("\n{message}");
+
+            thread::sleep(self.post_print_delay_millis);
+        }
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
-    pub fn game_after_cut(
+    #[must_use]
+    pub fn game_after_cut_to_string(
         &self,
         player_cut: &Card,
         opponent_cut: &Card,
@@ -202,6 +212,7 @@ impl Display {
     /// This will show the opponent's and player's points, but only show the player's [`Hand`] and
     /// crib. If starter is [`None`], then `"[?]"`. The player's crib will only be displayed if they
     /// have one.
+    #[must_use]
     pub fn game_before_play_to_string<C>(
         &self,
         starter: Option<&Card>,
@@ -235,6 +246,7 @@ impl Display {
     ///
     /// This will show the opponent's and player's points, but only show the player's [`Hand`] and
     /// crib. The player's crib will only be displayed if they have one.
+    #[must_use]
     pub fn game_during_play_to_string<C>(
         &self,
         starter: &Card,
@@ -284,6 +296,7 @@ impl Display {
     /// The [`String`] display for both [`Player`]s and the starter [`Card`] during counting.
     ///
     /// This will show the opponent's and player's points, [`Hand`]s and cribs.
+    #[must_use]
     pub fn game_during_counting_to_string<C>(
         &self,
         starter: &Card,
@@ -344,6 +357,24 @@ impl Display {
         result.join(&self.joiner)
     }
 
+    /// The [`String`] display for game over.
+    #[must_use]
+    pub fn game_over_to_string(&self, player_won: bool) -> String {
+        let mut result = Vec::new();
+
+        result.push(Self::spacer());
+
+        if player_won {
+            result.push("You Won!".to_string());
+        } else {
+            result.push("You Lost!".to_string());
+        }
+
+        result.push(Self::spacer());
+
+        result.join(&self.joiner)
+    }
+
     /// The display [`String`] representation of a [`Option<&Card>`].
     fn card_string(possible_card: Option<&Card>) -> String {
         match possible_card {
@@ -372,7 +403,7 @@ mod tests {
     use crate::game::{PlayData, Player, PredeterminedController};
 
     #[test]
-    fn test_game_after_cut_player_won() {
+    fn test_game_after_cut_to_string_player_won() {
         let display = Display::new();
 
         let player_cut = Card::new(Rank::King, Suit::Clubs);
@@ -385,13 +416,14 @@ mod tests {
             + "Player Won Cut\n"
             + "******************************************";
 
-        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ true);
+        let result =
+            display.game_after_cut_to_string(&player_cut, &opponent_cut, /*player_won=*/ true);
 
         assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_game_after_cut_opponent_won() {
+    fn test_game_after_cut_to_string_opponent_won() {
         let display = Display::new();
 
         let player_cut = Card::new(Rank::Eight, Suit::Spades);
@@ -404,7 +436,11 @@ mod tests {
             + "Opponent Won Cut\n"
             + "******************************************";
 
-        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ false);
+        let result = display.game_after_cut_to_string(
+            &player_cut,
+            &opponent_cut,
+            /*player_won=*/ false,
+        );
 
         assert_eq!(result, expected);
     }
