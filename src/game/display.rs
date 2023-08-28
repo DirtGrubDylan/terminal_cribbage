@@ -167,7 +167,7 @@ impl Display {
     }
 
     /// Print given message to `std::out` using [`thread::sleep`] with a delay after printing.
-    pub fn println(&self, message: String) {
+    pub fn println(&self, message: &str) {
         if self.should_print {
             println!("\n{message}");
 
@@ -176,6 +176,7 @@ impl Display {
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
+    #[must_use]
     pub fn game_after_cut_to_string(
         &self,
         player_cut: &Card,
@@ -211,6 +212,7 @@ impl Display {
     /// This will show the opponent's and player's points, but only show the player's [`Hand`] and
     /// crib. If starter is [`None`], then `"[?]"`. The player's crib will only be displayed if they
     /// have one.
+    #[must_use]
     pub fn game_before_play_to_string<C>(
         &self,
         starter: Option<&Card>,
@@ -244,6 +246,7 @@ impl Display {
     ///
     /// This will show the opponent's and player's points, but only show the player's [`Hand`] and
     /// crib. The player's crib will only be displayed if they have one.
+    #[must_use]
     pub fn game_during_play_to_string<C>(
         &self,
         starter: &Card,
@@ -293,6 +296,7 @@ impl Display {
     /// The [`String`] display for both [`Player`]s and the starter [`Card`] during counting.
     ///
     /// This will show the opponent's and player's points, [`Hand`]s and cribs.
+    #[must_use]
     pub fn game_during_counting_to_string<C>(
         &self,
         starter: &Card,
@@ -354,6 +358,7 @@ impl Display {
     }
 
     /// The [`String`] display for game over.
+    #[must_use]
     pub fn game_over_to_string(&self, player_won: bool) -> String {
         let mut result = Vec::new();
 
