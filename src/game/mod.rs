@@ -261,20 +261,34 @@ where
             }
         }
 
-        let discards = vec![
-            self.pone
-                .remove_card()
-                .expect("Pone Controller has no moves for first discard!"),
-            self.dealer
-                .remove_card()
-                .expect("Dealer Controller has no moves for first discard!"),
-            self.pone
-                .remove_card()
-                .expect("Pone Controller has no moves for second discard!"),
-            self.dealer
-                .remove_card()
-                .expect("Dealer Controller has no moves for second discard!"),
-        ];
+        let mut discards = vec![];
+
+        for _ in 0..2 {
+            self.display
+                .println(self.display.game_before_play_to_string(
+                    /*starter=*/ None,
+                    &self.dealer,
+                    &self.pone,
+                ));
+
+            discards.push(
+                self.pone
+                    .remove_card()
+                    .expect("Pone Controller has no moves for first discard!"),
+            );
+            discards.push(
+                self.dealer
+                    .remove_card()
+                    .expect("Dealer Controller has no moves for first discard!"),
+            );
+        }
+
+        self.display
+            .println(self.display.game_before_play_to_string(
+                /*starter=*/ None,
+                &self.dealer,
+                &self.pone,
+            ));
 
         let crib = Hand::from(discards);
 
