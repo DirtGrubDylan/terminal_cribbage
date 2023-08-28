@@ -1,89 +1,37 @@
 extern crate libterminal_cribbage;
 
-use std::io::{self, Write};
+use std::io;
 
-use libterminal_cribbage::cards::{Deck, Hand};
-use libterminal_cribbage::game::{Player, PredeterminedController};
+use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+use libterminal_cribbage::game::{Game, Player, PredeterminedController};
 
 fn main() -> io::Result<()> {
-    let mut d = Deck::new();
+    let controller =
+        PredeterminedController::from(vec![2, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0]);
 
-    println!("Deck unshuffled: {d}");
+    let player_1 = Player::new(controller.clone());
+    let player_2 = Player::new(controller);
 
-    d.shuffle();
+    let deck_cards = vec![
+        Card::new(Rank::Five, Suit::Clubs),
+        Card::new(Rank::Jack, Suit::Clubs),
+        Card::new(Rank::Five, Suit::Diamonds),
+        Card::new(Rank::Five, Suit::Hearts),
+        Card::new(Rank::Five, Suit::Spades),
+        Card::new(Rank::Four, Suit::Spades),
+        Card::new(Rank::Four, Suit::Clubs),
+        Card::new(Rank::Four, Suit::Hearts),
+        Card::new(Rank::Four, Suit::Diamonds),
+        Card::new(Rank::Three, Suit::Spades),
+        Card::new(Rank::Three, Suit::Clubs),
+        Card::new(Rank::Three, Suit::Hearts),
+        Card::new(Rank::Three, Suit::Diamonds),
+    ];
+    let deck = Deck::new_with_cards(deck_cards);
 
-    println!("Deck unshuffled: {d}");
+    let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
-    let mut hand = Hand::new();
-
-    for _ in 0..5 {
-        if let Some(card) = d.deal() {
-            hand.add_card(card);
-        }
-    }
-
-    println!("Deck after deal: {d}");
-    println!("Hand after deal: {hand}");
-
-    let player_controller = PredeterminedController::from(vec![0, 0, 0]);
-
-    let mut player = Player::new(player_controller);
-
-    for _ in 0..5 {
-        if let Some(card) = d.deal() {
-            player.add_card(card);
-        }
-    }
-
-    println!("Deck after second deal: {d}");
-    println!("Hand after second deal: {hand}");
-    println!("Player after second deal: {player}");
-
-    let _ = player.discard();
-    let _ = player.discard();
-
-    println!("Player after two discards: {player}");
-
-    let player_str = player.to_string();
-
-    println!("Player to string: {player_str}");
-
-    println!("********************************************************");
-
-    let mut turn = 0;
-    let mut input = String::new();
-
-    while input != "6" {
-        input.clear();
-
-        print!("Please type something: ");
-
-        io::stdout().flush()?;
-
-        input = if turn % 2 == 0 {
-            get_something()
-        } else {
-            get_something_auto()
-        };
-
-        if turn % 2 == 1 {
-            println!("{input}");
-        }
-
-        turn += 1;
-    }
+    game.play(&Some(deck));
 
     Ok(())
-}
-
-fn get_something_auto() -> String {
-    "1".to_string()
-}
-
-fn get_something() -> String {
-    let mut input = String::new();
-
-    let _ = io::stdin().read_line(&mut input);
-
-    input.trim().to_string()
 }

@@ -20,6 +20,12 @@ use crate::game::{Controller, PlayData, Player};
 /// Choose Card to Cut (0 to 52): _
 /// *************************************
 ///
+/// Show cuts from deck;
+/// *************************************
+/// Player Cut: [K♣]
+/// Opponenet Cut: [8♠]
+/// *************************************
+///
 /// Player has to discard to crib.
 /// *************************************
 /// Player Points: 0 | Opponent Points: 0
@@ -147,6 +153,26 @@ impl Display {
         Display {
             joiner: String::from("\n"),
         }
+    }
+
+    /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
+    pub fn game_after_cut(&self, player_cut: &Card, opponent_cut: &Card) -> String {
+        let mut result = Vec::new();
+
+        result.push(Self::spacer());
+
+        result.push(format!(
+            "Player Cut: {}",
+            Self::card_string(Some(player_cut))
+        ));
+        result.push(format!(
+            "Opponent Cut: {}",
+            Self::card_string(Some(opponent_cut))
+        ));
+
+        result.push(Self::spacer());
+
+        result.join(&self.joiner)
     }
 
     /// The [`String`] display for both [`Player`]s and the starter [`Card`] before play.
@@ -322,6 +348,24 @@ mod tests {
 
     use crate::cards::{Card, Rank, Suit};
     use crate::game::{PlayData, Player, PredeterminedController};
+
+    #[test]
+    fn test_game_after_cut() {
+        let display = Display::new();
+
+        let player_cut = Card::new(Rank::King, Suit::Clubs);
+        let opponent_cut = Card::new(Rank::Eight, Suit::Spades);
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Cut: [K♣]\n"
+            + "Opponent Cut: [8♠]\n"
+            + "******************************************";
+
+        let result = display.game_after_cut(&player_cut, &opponent_cut);
+
+        assert_eq!(result, expected);
+    }
 
     #[test]
     fn test_game_before_play_to_string_discard_to_crib_no_starter() {

@@ -159,7 +159,7 @@ where
     /// # Panics
     ///
     /// If there have been 1,000 rounds, indicating that the game is broken and can't end loop.
-    fn play(&mut self, reset_with_deck: &Option<Deck>) {
+    pub fn play(&mut self, reset_with_deck: &Option<Deck>) {
         let mut round = 0;
 
         self.choose_dealer();
