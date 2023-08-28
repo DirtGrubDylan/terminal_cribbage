@@ -193,7 +193,7 @@ where
                 break;
             }
 
-            self.run_play_round();
+            self.run_play_round(&starter);
 
             if self.player_has_won() {
                 break;
@@ -328,23 +328,16 @@ where
             .deal()
             .expect("Could not get starter from empty deck!");
 
+        if starter.rank == Rank::Jack {
+            self.dealer.points += 2;
+        }
+
         self.display
             .println(self.display.game_before_play_to_string(
                 Some(&starter),
                 &self.dealer,
                 &self.pone,
             ));
-
-        if starter.rank == Rank::Jack {
-            self.dealer.points += 2;
-
-            self.display
-                .println(self.display.game_before_play_to_string(
-                    Some(&starter),
-                    &self.dealer,
-                    &self.pone,
-                ));
-        }
 
         starter
     }
@@ -362,11 +355,20 @@ where
     ///
     /// * If something goes wrong with counting turns or if this method exceeded 100 turns.
     /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
-    fn run_play_round(&mut self) {
+    fn run_play_round(&mut self, starter: &Card) {
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
 
         while self.dealer.has_cards_in_hand() || self.pone.has_cards_in_hand() {
+            let print_message = self.display.game_during_play_to_string(
+                starter,
+                &self.dealer,
+                &self.pone,
+                &play_data,
+            );
+
+            self.display.println(print_message);
+
             match turn % 2 {
                 0 => play_data.play_once(&mut self.pone, &self.dealer),
                 1 => play_data.play_once(&mut self.dealer, &self.pone),
@@ -393,6 +395,12 @@ where
                 self.pone
             );
         }
+
+        let print_message =
+            self.display
+                .game_during_play_to_string(starter, &self.dealer, &self.pone, &play_data);
+
+        self.display.println(print_message);
 
         self.dealer.gather_discarded();
         self.pone.gather_discarded();
@@ -771,6 +779,7 @@ mod tests {
         //     * Stack 3 -> KD(p1, 0pt, 10), GO (p1, 1pt, 10)
         //
         // Score at end: p1 = 4 (pair and 2 GOs), p2 = 4 (run of 3 and a GO)
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
 
         // Discard: 7C, JD, QD, KD
         let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
@@ -797,7 +806,7 @@ mod tests {
         let expected_dealer_points = 4;
         let expected_pone_points = 4;
 
-        game.run_play_round();
+        game.run_play_round(&starter);
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
@@ -817,6 +826,7 @@ mod tests {
         //     * p1 hit 121 break
         //
         // Score at end: p1 = 120 (pair), p2 = 124 (run of 3 and a GO)
+        let starter = Card::new(Rank::Eight, Suit::Diamonds);
 
         // Discard: 7C, JD, QD, KD
         let player_1_controller = PredeterminedController::from(vec![1, 0, 0, 0, 32]);
@@ -845,7 +855,7 @@ mod tests {
         let expected_dealer_points = 120;
         let expected_pone_points = 124;
 
-        game.run_play_round();
+        game.run_play_round(&starter);
 
         assert_eq!(game.dealer.points, expected_dealer_points);
         assert_eq!(game.pone.points, expected_pone_points);
