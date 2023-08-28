@@ -146,6 +146,7 @@ use crate::game::{Controller, PlayData, Player};
 #[derive(Debug, PartialEq, Clone)]
 pub struct Display {
     pub joiner: String,
+    should_print: bool,
     post_print_delay_millis: time::Duration,
 }
 
@@ -155,19 +156,27 @@ impl Display {
     pub fn new() -> Display {
         Display {
             joiner: String::from("\n"),
+            should_print: false,
             post_print_delay_millis: time::Duration::from_millis(500),
         }
     }
 
+    /// Turns on printing for [`Diplay`].
+    pub fn turn_on_printing(&mut self, should_print: bool) {
+        self.should_print = should_print;
+    }
+
     /// Print given message to `std::out` using [`thread::sleep`] with a delay after printing.
     pub fn println(&self, message: String) {
-        println!("\n{message}");
+        if self.should_print {
+            println!("\n{message}");
 
-        thread::sleep(self.post_print_delay_millis);
+            thread::sleep(self.post_print_delay_millis);
+        }
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
-    pub fn game_after_cut(
+    pub fn game_after_cut_to_string(
         &self,
         player_cut: &Card,
         opponent_cut: &Card,
@@ -372,7 +381,7 @@ mod tests {
     use crate::game::{PlayData, Player, PredeterminedController};
 
     #[test]
-    fn test_game_after_cut_player_won() {
+    fn test_game_after_cut_to_string_player_won() {
         let display = Display::new();
 
         let player_cut = Card::new(Rank::King, Suit::Clubs);
@@ -385,13 +394,14 @@ mod tests {
             + "Player Won Cut\n"
             + "******************************************";
 
-        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ true);
+        let result =
+            display.game_after_cut_to_string(&player_cut, &opponent_cut, /*player_won=*/ true);
 
         assert_eq!(result, expected);
     }
 
     #[test]
-    fn test_game_after_cut_opponent_won() {
+    fn test_game_after_cut_to_string_opponent_won() {
         let display = Display::new();
 
         let player_cut = Card::new(Rank::Eight, Suit::Spades);
@@ -404,7 +414,11 @@ mod tests {
             + "Opponent Won Cut\n"
             + "******************************************";
 
-        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ false);
+        let result = display.game_after_cut_to_string(
+            &player_cut,
+            &opponent_cut,
+            /*player_won=*/ false,
+        );
 
         assert_eq!(result, expected);
     }

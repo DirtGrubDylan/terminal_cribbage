@@ -31,6 +31,8 @@ fn main() -> io::Result<()> {
 
     let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
 
+    game.should_print(true);
+
     game.play(&Some(deck));
 
     Ok(())
