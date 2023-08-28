@@ -217,11 +217,11 @@ where
 
         let dealer_won = dealer_chosen_card > pone_chosen_card;
 
-        println!(
-            "{}",
-            self.display
-                .game_after_cut(&dealer_chosen_card, &pone_chosen_card, dealer_won)
-        );
+        self.display.println(self.display.game_after_cut(
+            &dealer_chosen_card,
+            &pone_chosen_card,
+            dealer_won,
+        ));
 
         // Maybe do a memswap instead
         if !dealer_won {

@@ -3,6 +3,8 @@
 #[cfg(doc)]
 use crate::cards::Hand;
 
+use std::{thread, time};
+
 use itertools::Itertools;
 
 use crate::cards::Card;
@@ -144,6 +146,7 @@ use crate::game::{Controller, PlayData, Player};
 #[derive(Debug, PartialEq, Clone)]
 pub struct Display {
     pub joiner: String,
+    post_print_delay_millis: time::Duration,
 }
 
 impl Display {
@@ -152,7 +155,15 @@ impl Display {
     pub fn new() -> Display {
         Display {
             joiner: String::from("\n"),
+            post_print_delay_millis: time::Duration::from_millis(500),
         }
+    }
+
+    /// Print given message to std::out using [`thread::sleep`] with a delay after printing.
+    pub fn println(&self, message: String) {
+        println!("{message}");
+
+        thread::sleep(self.post_print_delay_millis);
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
