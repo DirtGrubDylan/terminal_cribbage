@@ -156,7 +156,12 @@ impl Display {
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].
-    pub fn game_after_cut(&self, player_cut: &Card, opponent_cut: &Card) -> String {
+    pub fn game_after_cut(
+        &self,
+        player_cut: &Card,
+        opponent_cut: &Card,
+        player_won: bool,
+    ) -> String {
         let mut result = Vec::new();
 
         result.push(Self::spacer());
@@ -169,6 +174,12 @@ impl Display {
             "Opponent Cut: {}",
             Self::card_string(Some(opponent_cut))
         ));
+
+        if player_won {
+            result.push("Player Won Cut".to_string());
+        } else {
+            result.push("Opponent Won Cut".to_string());
+        }
 
         result.push(Self::spacer());
 
@@ -350,7 +361,7 @@ mod tests {
     use crate::game::{PlayData, Player, PredeterminedController};
 
     #[test]
-    fn test_game_after_cut() {
+    fn test_game_after_cut_player_won() {
         let display = Display::new();
 
         let player_cut = Card::new(Rank::King, Suit::Clubs);
@@ -360,9 +371,29 @@ mod tests {
             + "******************************************\n"
             + "Player Cut: [K♣]\n"
             + "Opponent Cut: [8♠]\n"
+            + "Player Won Cut\n"
             + "******************************************";
 
-        let result = display.game_after_cut(&player_cut, &opponent_cut);
+        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ true);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_game_after_cut_opponent_won() {
+        let display = Display::new();
+
+        let player_cut = Card::new(Rank::Eight, Suit::Spades);
+        let opponent_cut = Card::new(Rank::King, Suit::Clubs);
+
+        let expected = String::new()
+            + "******************************************\n"
+            + "Player Cut: [8♠]\n"
+            + "Opponent Cut: [K♣]\n"
+            + "Opponent Won Cut\n"
+            + "******************************************";
+
+        let result = display.game_after_cut(&player_cut, &opponent_cut, /*player_won=*/ false);
 
         assert_eq!(result, expected);
     }

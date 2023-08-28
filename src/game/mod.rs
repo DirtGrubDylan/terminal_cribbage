@@ -215,8 +215,16 @@ where
         let dealer_chosen_card = self.dealer.choose_card_for_cut(&mut temp_deck).unwrap();
         let pone_chosen_card = self.pone.choose_card_for_cut(&mut temp_deck).unwrap();
 
+        let dealer_won = dealer_chosen_card > pone_chosen_card;
+
+        println!(
+            "{}",
+            self.display
+                .game_after_cut(&dealer_chosen_card, &pone_chosen_card, dealer_won)
+        );
+
         // Maybe do a memswap instead
-        if dealer_chosen_card < pone_chosen_card {
+        if !dealer_won {
             let temp_player = self.dealer.clone();
 
             self.dealer = self.pone.clone();
