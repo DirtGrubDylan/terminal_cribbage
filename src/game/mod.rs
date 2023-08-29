@@ -30,8 +30,9 @@ pub struct Game<C>
 where
     C: Controller + Clone + std::fmt::Debug,
 {
-    dealer: Player<C>,
-    pone: Player<C>,
+    player_1: Player<C>,
+    player_2: Player<C>,
+    player_1_is_dealer: bool,
     deck: Deck,
     display: Display,
 }
@@ -62,8 +63,9 @@ where
         deck.shuffle();
 
         Game {
-            dealer: player_1,
-            pone: player_2,
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
             deck,
             display: Display::new(),
         }
@@ -95,8 +97,9 @@ where
     /// ```
     pub fn new_with_deck(player_1: Player<C>, player_2: Player<C>, deck: Deck) -> Game<C> {
         Game {
-            dealer: player_1,
-            pone: player_2,
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
             deck,
             display: Display::new(),
         }
@@ -217,10 +220,10 @@ where
             assert!(1_000 >= round, "Play got stuck at round 1000!");
         }
 
-        let dealer_won = self.dealer.points >= 121;
+        let player_1_won = self.player_1.points >= 121;
 
         self.display
-            .println(&self.display.game_over_to_string(dealer_won));
+            .println(&self.display.game_over_to_string(player_1_won));
     }
 
     /// Chose dealer and pone.
@@ -237,23 +240,25 @@ where
     fn choose_dealer(&mut self) {
         let mut temp_deck = self.deck.clone();
 
-        let dealer_chosen_card = self.dealer.choose_card_for_cut(&mut temp_deck).unwrap();
-        let pone_chosen_card = self.pone.choose_card_for_cut(&mut temp_deck).unwrap();
+        let player_1_chosen_card = self.player_1.choose_card_for_cut(&mut temp_deck).unwrap();
+        let player_2_chosen_card = self.player_2.choose_card_for_cut(&mut temp_deck).unwrap();
 
-        let dealer_won = dealer_chosen_card > pone_chosen_card;
+        self.player_1_is_dealer = player_1_chosen_card > player_2_chosen_card;
 
-        self.display.println(&self.display.game_after_cut_to_string(
-            &dealer_chosen_card,
-            &pone_chosen_card,
-            dealer_won,
-        ));
+        let message = self.display.game_after_cut_to_string(
+            &player_1_chosen_card,
+            &player_2_chosen_card,
+            self.player_1_is_dealer,
+        );
+
+        self.display.println(&message);
 
         // Maybe do a memswap instead
-        if !dealer_won {
-            let temp_player = self.dealer.clone();
+        if !self.player_1_is_dealer {
+            let temp_player = self.player_1.clone();
 
-            self.dealer = self.pone.clone();
-            self.pone = temp_player;
+            self.player_1 = self.player_2.clone();
+            self.player_2 = temp_player;
         }
     }
 
@@ -261,7 +266,7 @@ where
     ///
     /// If either [`Player`] has at least 121 points, the game is won for them.
     fn player_has_won(&self) -> bool {
-        (121 <= self.dealer.points) || (121 <= self.pone.points)
+        (121 <= self.player_1.points) || (121 <= self.player_2.points)
     }
 
     /// This method facilitates the [`Player`]s discarding for cribs.
@@ -274,13 +279,12 @@ where
     ///
     /// * If there are not enough [`Card`]s in the [`Deck`] to deal 12 [`Card`]s.
     /// * If either [`Player::controller`] chooses a discard out of bounds of their [`Hand`]s.
-    ///
     fn run_deal_and_discard_round(&mut self) {
         for _ in 0..6 {
             match (self.deck.deal(), self.deck.deal()) {
                 (Some(card_1), Some(card_2)) => {
-                    self.dealer.add_card(card_1);
-                    self.pone.add_card(card_2);
+                    self.player_1.add_card(card_1);
+                    self.player_2.add_card(card_2);
                 }
                 _ => panic!("There are not enough cards to deal!"),
             }
@@ -289,35 +293,40 @@ where
         let mut discards = vec![];
 
         for _ in 0..2 {
-            self.display
-                .println(&self.display.game_before_play_to_string(
-                    /*starter=*/ None,
-                    &self.dealer,
-                    &self.pone,
-                ));
+            let message = self.display.game_before_play_to_string(
+                /*starter=*/ None,
+                &self.player_1,
+                &self.player_2,
+            );
+
+            self.display.println(&message);
 
             discards.push(
-                self.pone
+                self.player_2
                     .remove_card()
-                    .expect("Pone Controller has no moves for first discard!"),
+                    .expect("Player 2 Controller has no moves for first discard!"),
             );
             discards.push(
-                self.dealer
+                self.player_1
                     .remove_card()
-                    .expect("Dealer Controller has no moves for first discard!"),
+                    .expect("Player 1 Controller has no moves for first discard!"),
             );
         }
+        let message = self.display.game_before_play_to_string(
+            /*starter=*/ None,
+            &self.player_1,
+            &self.player_2,
+        );
 
-        self.display
-            .println(&self.display.game_before_play_to_string(
-                /*starter=*/ None,
-                &self.dealer,
-                &self.pone,
-            ));
+        self.display.println(&message);
 
         let crib = Hand::from(discards);
 
-        self.dealer.crib = crib;
+        if self.player_1_is_dealer {
+            self.player_1.crib = crib;
+        } else {
+            self.player_2.crib = crib;
+        }
     }
 
     /// Return starter [`Card`], which is the [`Card`] at the top of the [`Deck`].
@@ -334,15 +343,14 @@ where
             .expect("Could not get starter from empty deck!");
 
         if starter.rank == Rank::Jack {
-            self.dealer.points += 2;
+            self.player_1.points += 2;
         }
 
-        self.display
-            .println(&self.display.game_before_play_to_string(
-                Some(&starter),
-                &self.dealer,
-                &self.pone,
-            ));
+        let message =
+            self.display
+                .game_before_play_to_string(Some(&starter), &self.player_1, &self.player_2);
+
+        self.display.println(&message);
 
         starter
     }
@@ -364,27 +372,33 @@ where
         let mut turn: usize = 0;
         let mut play_data = PlayData::new();
 
-        while self.dealer.has_cards_in_hand() || self.pone.has_cards_in_hand() {
-            let print_message = self.display.game_during_play_to_string(
+        while self.player_1.has_cards_in_hand() || self.player_2.has_cards_in_hand() {
+            let message = self.display.game_during_play_to_string(
                 starter,
-                &self.dealer,
-                &self.pone,
+                &self.player_1,
+                &self.player_2,
                 &play_data,
             );
 
-            self.display.println(&print_message);
+            self.display.println(&message);
+
+            let (dealer, pone) = if self.player_1_is_dealer {
+                (&mut self.player_1, &mut self.player_2)
+            } else {
+                (&mut self.player_2, &mut self.player_1)
+            };
 
             match turn % 2 {
-                0 => play_data.play_once(&mut self.pone, &self.dealer),
-                1 => play_data.play_once(&mut self.dealer, &self.pone),
+                0 => play_data.play_once(pone, dealer),
+                1 => play_data.play_once(dealer, pone),
                 _ => panic!("Something went wrong with alternating turns: {}", turn),
             }
 
-            if (121 <= self.dealer.points) || (121 <= self.pone.points) {
+            if (121 <= self.player_1.points) || (121 <= self.player_2.points) {
                 break;
             }
 
-            let reset = play_data.reset_if_needed(&self.dealer, &self.pone);
+            let reset = play_data.reset_if_needed(&self.player_1, &self.player_2);
 
             if !reset {
                 turn += 1;
@@ -396,19 +410,22 @@ where
                 "Too many turns!\nTurn: {}\nPlayData: {:?}\nDealer: {:?}\nPone: {:?}",
                 turn,
                 play_data,
-                self.dealer,
-                self.pone
+                self.player_1,
+                self.player_2
             );
         }
 
-        let print_message =
-            self.display
-                .game_during_play_to_string(starter, &self.dealer, &self.pone, &play_data);
+        let message = self.display.game_during_play_to_string(
+            starter,
+            &self.player_1,
+            &self.player_2,
+            &play_data,
+        );
 
-        self.display.println(&print_message);
+        self.display.println(&message);
 
-        self.dealer.gather_discarded();
-        self.pone.gather_discarded();
+        self.player_1.gather_discarded();
+        self.player_2.gather_discarded();
     }
 
     /// This method facilitates the scoring round.
@@ -416,26 +433,34 @@ where
     /// The [`Player`]s [`Hand`]s/cribs are scored, with the starter [`Card`], starting with the
     /// Pone.
     fn run_counting_round(&mut self, starter: &Card) {
-        self.pone.points += self.pone.hand.total(starter, /*is_crib=*/ false);
+        let (dealer, pone) = if self.player_1_is_dealer {
+            (&mut self.player_1, &mut self.player_2)
+        } else {
+            (&mut self.player_2, &mut self.player_1)
+        };
 
-        if 121 <= self.pone.points {
-            let print_message =
-                self.display
-                    .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+        pone.points += pone.hand.total(starter, /*is_crib=*/ false);
 
-            self.display.println(&print_message);
+        if 121 <= pone.points {
+            let message = self.display.game_during_counting_to_string(
+                starter,
+                &self.player_1,
+                &self.player_2,
+            );
+
+            self.display.println(&message);
 
             return;
         }
 
-        self.dealer.points += self.dealer.hand.total(starter, /*is_crib=*/ false);
-        self.dealer.points += self.dealer.crib.total(starter, /*is_crib=*/ true);
+        dealer.points += dealer.hand.total(starter, /*is_crib=*/ false);
+        dealer.points += dealer.crib.total(starter, /*is_crib=*/ true);
 
-        let print_message =
+        let message =
             self.display
-                .game_during_counting_to_string(starter, &self.dealer, &self.pone);
+                .game_during_counting_to_string(starter, &self.player_1, &self.player_2);
 
-        self.display.println(&print_message);
+        self.display.println(&message);
     }
 
     /// Resets the [`Deck`].
@@ -448,9 +473,9 @@ where
     fn reset_deck(&mut self, starter: Card) {
         let mut remaining_deck_cards = self.deck.as_vec().clone();
 
-        remaining_deck_cards.append(&mut self.dealer.remove_all());
+        remaining_deck_cards.append(&mut self.player_1.remove_all());
 
-        remaining_deck_cards.append(&mut self.pone.remove_all());
+        remaining_deck_cards.append(&mut self.player_2.remove_all());
 
         remaining_deck_cards.push(starter);
 
@@ -464,16 +489,13 @@ where
     fn reset_deck_with(&mut self, deck: Deck) {
         self.deck = deck;
 
-        self.dealer.reset();
-        self.pone.reset();
+        self.player_1.reset();
+        self.player_2.reset();
     }
 
-    /// Swaps [`Deck::dealer`] and [`Deck::pone`]
+    /// Alternate [`Deck::player_1_is_dealer`].
     fn swap_dealer_and_pone(&mut self) {
-        let temp = self.dealer.clone();
-
-        self.dealer = self.pone.clone();
-        self.pone = temp;
+        self.player_1_is_dealer = !self.player_1_is_dealer;
     }
 }
 
@@ -513,8 +535,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.dealer, expected_player_1);
-        assert_eq!(game.pone, expected_player_2);
+        assert_eq!(game.player_1, expected_player_1);
+        assert_eq!(game.player_2, expected_player_2);
     }
 
     #[test]
@@ -546,8 +568,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.dealer, expected_player_1);
-        assert_eq!(game.pone, expected_player_2);
+        assert_eq!(game.player_1, expected_player_1);
+        assert_eq!(game.player_2, expected_player_2);
     }
 
     #[test]
@@ -579,8 +601,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.dealer, expected_player_2);
-        assert_eq!(game.pone, expected_player_1);
+        assert_eq!(game.player_1, expected_player_2);
+        assert_eq!(game.player_2, expected_player_1);
     }
 
     #[test]
@@ -612,8 +634,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.dealer, expected_player_2);
-        assert_eq!(game.pone, expected_player_1);
+        assert_eq!(game.player_1, expected_player_2);
+        assert_eq!(game.player_2, expected_player_1);
     }
 
     #[test]
@@ -677,8 +699,8 @@ mod tests {
         game.run_deal_and_discard_round();
 
         assert_eq!(game.deck, Deck::new_with_cards(Vec::new()));
-        assert_eq!(game.dealer, expected_player_1);
-        assert_eq!(game.pone, expected_player_2);
+        assert_eq!(game.player_1, expected_player_1);
+        assert_eq!(game.player_2, expected_player_2);
     }
 
     #[test]
@@ -730,8 +752,8 @@ mod tests {
 
         assert_eq!(starter, Card::new(Rank::Six, Suit::Hearts));
         assert_eq!(game.deck.as_vec(), &expected_deck_cards);
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
     }
 
     #[test]
@@ -783,8 +805,8 @@ mod tests {
 
         assert_eq!(starter, Card::new(Rank::Jack, Suit::Diamonds));
         assert_eq!(game.deck.as_vec(), &expected_deck_cards);
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
     }
 
     #[test]
@@ -825,14 +847,14 @@ mod tests {
 
         game.run_play_round(&starter);
 
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
 
         // assert that the [`Hand`]s were reset
-        assert_eq!(game.dealer.hand.as_vec().len(), 4);
-        assert_eq!(game.pone.hand.as_vec().len(), 4);
-        assert!(game.dealer.discarded.is_empty());
-        assert!(game.pone.discarded.is_empty());
+        assert_eq!(game.player_1.hand.as_vec().len(), 4);
+        assert_eq!(game.player_2.hand.as_vec().len(), 4);
+        assert!(game.player_1.discarded.is_empty());
+        assert!(game.player_2.discarded.is_empty());
     }
 
     #[test]
@@ -874,14 +896,14 @@ mod tests {
 
         game.run_play_round(&starter);
 
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
 
         // assert that the hands were reset
-        assert_eq!(game.dealer.hand.as_vec().len(), 4);
-        assert_eq!(game.pone.hand.as_vec().len(), 4);
-        assert!(game.dealer.discarded.is_empty());
-        assert!(game.pone.discarded.is_empty());
+        assert_eq!(game.player_1.hand.as_vec().len(), 4);
+        assert_eq!(game.player_2.hand.as_vec().len(), 4);
+        assert!(game.player_1.discarded.is_empty());
+        assert!(game.player_2.discarded.is_empty());
     }
 
     #[test]
@@ -924,8 +946,8 @@ mod tests {
 
         game.run_counting_round(&starter);
 
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
     }
 
     #[test]
@@ -969,8 +991,8 @@ mod tests {
 
         game.run_counting_round(&starter);
 
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
     }
 
     #[test]
@@ -1077,8 +1099,8 @@ mod tests {
         game.reset_deck_with(expected_deck.clone());
 
         assert_eq!(game.deck, expected_deck);
-        assert!(!game.dealer.has_cards());
-        assert!(!game.pone.has_cards());
+        assert!(!game.player_1.has_cards());
+        assert!(!game.player_2.has_cards());
     }
 
     #[test]
@@ -1180,7 +1202,7 @@ mod tests {
 
         game.play(&Some(deck));
 
-        assert_eq!(game.dealer.points, expected_dealer_points);
-        assert_eq!(game.pone.points, expected_pone_points);
+        assert_eq!(game.player_1.points, expected_dealer_points);
+        assert_eq!(game.player_2.points, expected_pone_points);
     }
 }
