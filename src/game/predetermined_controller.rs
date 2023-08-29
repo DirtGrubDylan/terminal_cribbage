@@ -45,8 +45,17 @@ impl Controller for PredeterminedController {
     /// assert_eq!(controller.get_card_index(&available_cards), Some(2));
     /// assert_eq!(controller.get_card_index(&available_cards), None);
     /// ```
-    fn get_card_index(&mut self, _available_cards: &[Card]) -> Option<usize> {
-        self.card_indices.pop_front()
+    fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize> {
+        let result = self.card_indices.pop_front();
+
+        let number_of_cards = available_cards.len();
+
+        println!(
+            "Choose Card to Discard (1 to {number_of_cards}): {:?}",
+            result.map(|index| index + 1)
+        );
+
+        result
     }
 }
 

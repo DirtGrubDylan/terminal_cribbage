@@ -166,10 +166,20 @@ impl Display {
         self.should_print = should_print;
     }
 
-    /// Print given message to `std::out` using [`thread::sleep`] with a delay after printing.
+    /// Print message no spacer to `std::out` using [`thread::sleep`] with a delay after printing.
+    pub fn println_no_spacer(&self, message: &str) {
+        if self.should_print {
+            println!("{message}");
+
+            thread::sleep(self.post_print_delay_millis);
+        }
+    }
+
+    /// Print message with spacer to `std::out` using [`thread::sleep`] with a delay after printing.
     pub fn println(&self, message: &str) {
         if self.should_print {
-            println!("\n{message}");
+            println!("\n{}", Self::spacer());
+            println!("{message}");
 
             thread::sleep(self.post_print_delay_millis);
         }
@@ -185,8 +195,6 @@ impl Display {
     ) -> String {
         let mut result = Vec::new();
 
-        result.push(Self::spacer());
-
         result.push(format!(
             "Player Cut: {}",
             Self::card_string(Some(player_cut))
@@ -201,8 +209,6 @@ impl Display {
         } else {
             result.push("Opponent Won Cut".to_string());
         }
-
-        result.push(Self::spacer());
 
         result.join(&self.joiner)
     }
@@ -224,8 +230,6 @@ impl Display {
     {
         let mut result = Vec::new();
 
-        result.push(Self::spacer());
-
         result.push(format!(
             "Player Points: {} | Opponent Points: {}",
             player.points, opponent.points
@@ -236,8 +240,6 @@ impl Display {
         if player.has_crib() {
             result.push(format!("Player Crib: {}", player.crib));
         }
-
-        result.push(Self::spacer());
 
         result.join(&self.joiner)
     }
@@ -258,8 +260,6 @@ impl Display {
         C: Controller,
     {
         let mut result = Vec::new();
-
-        result.push(Self::spacer());
 
         result.push(format!(
             "Player Points: {} | Opponent Points: {}",
@@ -288,8 +288,6 @@ impl Display {
 
         result.push(format!("Play Stack: [ {play_stack_str} ]"));
 
-        result.push(Self::spacer());
-
         result.join(&self.joiner)
     }
 
@@ -307,8 +305,6 @@ impl Display {
         C: Controller,
     {
         let mut result = Vec::new();
-
-        result.push(Self::spacer());
 
         result.push(format!(
             "Player Points: {} | Opponent Points: {}",
@@ -352,8 +348,6 @@ impl Display {
             ));
         }
 
-        result.push(Self::spacer());
-
         result.join(&self.joiner)
     }
 
@@ -362,15 +356,11 @@ impl Display {
     pub fn game_over_to_string(&self, player_won: bool) -> String {
         let mut result = Vec::new();
 
-        result.push(Self::spacer());
-
         if player_won {
             result.push("You Won!".to_string());
         } else {
             result.push("You Lost!".to_string());
         }
-
-        result.push(Self::spacer());
 
         result.join(&self.joiner)
     }
@@ -409,12 +399,7 @@ mod tests {
         let player_cut = Card::new(Rank::King, Suit::Clubs);
         let opponent_cut = Card::new(Rank::Eight, Suit::Spades);
 
-        let expected = String::new()
-            + "******************************************\n"
-            + "Player Cut: [K♣]\n"
-            + "Opponent Cut: [8♠]\n"
-            + "Player Won Cut\n"
-            + "******************************************";
+        let expected = "Player Cut: [K♣]\nOpponent Cut: [8♠]\nPlayer Won Cut";
 
         let result =
             display.game_after_cut_to_string(&player_cut, &opponent_cut, /*player_won=*/ true);
@@ -429,12 +414,7 @@ mod tests {
         let player_cut = Card::new(Rank::Eight, Suit::Spades);
         let opponent_cut = Card::new(Rank::King, Suit::Clubs);
 
-        let expected = String::new()
-            + "******************************************\n"
-            + "Player Cut: [8♠]\n"
-            + "Opponent Cut: [K♣]\n"
-            + "Opponent Won Cut\n"
-            + "******************************************";
+        let expected = "Player Cut: [8♠]\nOpponent Cut: [K♣]\nOpponent Won Cut";
 
         let result = display.game_after_cut_to_string(
             &player_cut,
@@ -465,11 +445,9 @@ mod tests {
         let player_2 = Player::new(controller);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [?]\n"
-            + "Player Hand: [ [8♠],[K♣],[2♠],[6♦],[5♦],[5♣] ]\n"
-            + "******************************************";
+            + "Player Hand: [ [8♠],[K♣],[2♠],[6♦],[5♦],[5♣] ]";
 
         let result = display.game_before_play_to_string(starter, &player_1, &player_2);
 
@@ -496,11 +474,9 @@ mod tests {
         let player_2 = Player::new(controller);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [4♦]\n"
-            + "Player Hand: [ [8♠],[K♣],[2♠],[6♦],[5♦],[5♣] ]\n"
-            + "******************************************";
+            + "Player Hand: [ [8♠],[K♣],[2♠],[6♦],[5♦],[5♣] ]";
 
         let result = display.game_before_play_to_string(Some(&starter), &player_1, &player_2);
 
@@ -531,12 +507,10 @@ mod tests {
         let player_2 = Player::new(controller);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [4♦]\n"
             + "Player Hand: [ [8♠],[K♣],[2♠],[6♦] ]\n"
-            + "Player Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
-            + "******************************************";
+            + "Player Crib: [ [A♣],[2♣],[5♦],[5♣] ]";
 
         let result = display.game_before_play_to_string(Some(&starter), &player_1, &player_2);
 
@@ -577,15 +551,13 @@ mod tests {
         play_data.play_once(&mut player_2, &player_1);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [4♦]\n"
             + "Player Hand: [ [8♠],[K♣],[6♦] ]\n"
             + "Player Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
             + "Opponent Hand Size: 3\n"
             + "Opponent Last Played: [8♣]\n"
-            + "Play Stack: [ [A♦],[8♣] ]\n"
-            + "******************************************";
+            + "Play Stack: [ [A♦],[8♣] ]";
 
         let result = display.game_during_play_to_string(&starter, &player_1, &player_2, &play_data);
 
@@ -620,14 +592,12 @@ mod tests {
         play_data.play_once(&mut player_2, &player_1);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [4♦]\n"
             + "Player Hand: [ [8♠],[K♣],[6♦] ]\n"
             + "Opponent Hand Size: 3\n"
             + "Opponent Last Played: [8♣]\n"
-            + "Play Stack: [ [A♦],[8♣] ]\n"
-            + "******************************************";
+            + "Play Stack: [ [A♦],[8♣] ]";
 
         let result = display.game_during_play_to_string(&starter, &player_1, &player_2, &play_data);
 
@@ -664,7 +634,6 @@ mod tests {
         let player_2 = Player::new_with_cards(controller, player_2_hand);
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 0 | Opponent Points: 0\n"
             + "Starter: [4♦]\n"
             + "Player Hand: [ [8♠],[K♣],[A♦],[6♦] ]\n"
@@ -672,8 +641,7 @@ mod tests {
             + "Opponent Hand: [ [8♦],[K♦],[6♣],[8♣] ]\n"
             + "Opponent Hand Score: 2\n"
             + "Hand Score: 4\n"
-            + "Crib Score: 4\n"
-            + "******************************************";
+            + "Crib Score: 4";
 
         let result = display.game_during_counting_to_string(&starter, &player_1, &player_2);
 
@@ -713,7 +681,6 @@ mod tests {
         player_2.points += 2;
 
         let expected = String::new()
-            + "******************************************\n"
             + "Player Points: 8 | Opponent Points: 2\n"
             + "Starter: [4♦]\n"
             + "Player Hand: [ [8♠],[K♣],[A♦],[6♦] ]\n"
@@ -721,8 +688,7 @@ mod tests {
             + "Opponent Crib: [ [A♣],[2♣],[5♦],[5♣] ]\n"
             + "Opponent Hand Score: 2\n"
             + "Opponent Crib Score: 4\n"
-            + "Hand Score: 4\n"
-            + "******************************************";
+            + "Hand Score: 4";
 
         let result = display.game_during_counting_to_string(&starter, &player_1, &player_2);
 
