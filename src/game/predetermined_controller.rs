@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use cards::Card;
-use game::Controller;
+use game::{Controller, Display};
 
 /// A "predetermined" controller, who implements [`Controller`].
 ///
@@ -14,6 +14,26 @@ use game::Controller;
 pub struct PredeterminedController {
     /// The indicies for choosing [`Card`]s for a player.
     card_indices: VecDeque<usize>,
+    display: Display,
+}
+
+impl PredeterminedController {
+    /// Creates a new [`PredeterminedController`] with a given array and [`Display`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::VecDeque;
+    /// use libterminal_cribbage::game::{Display, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::new(vec![1, 2, 3], Display::new());
+    /// ```
+    pub fn new(card_indices: Vec<usize>, display: Display) -> PredeterminedController {
+        PredeterminedController {
+            card_indices: VecDeque::from(card_indices),
+            display,
+        }
+    }
 }
 
 impl Controller for PredeterminedController {
@@ -71,9 +91,7 @@ impl From<Vec<usize>> for PredeterminedController {
     /// let result = PredeterminedController::from(vec![1, 2, 3]);
     /// ```
     fn from(vec: Vec<usize>) -> Self {
-        let card_indices = VecDeque::from(vec);
-
-        PredeterminedController { card_indices }
+        PredeterminedController::new(vec, Display::new())
     }
 }
 
@@ -86,6 +104,7 @@ mod tests {
     fn test_from_vec() {
         let expected = PredeterminedController {
             card_indices: VecDeque::from([1, 2, 3]),
+            display: Display::new(),
         };
 
         let result = PredeterminedController::from(vec![1, 2, 3]);
