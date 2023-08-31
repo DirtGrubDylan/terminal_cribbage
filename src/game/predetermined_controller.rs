@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use cards::Card;
-use game::{Controller, Display};
+use game::{Controller, Display, UiDisplay};
 
 /// A "predetermined" controller, who implements [`Controller`].
 ///
@@ -11,24 +11,24 @@ use game::{Controller, Display};
 /// This is strictly used for testing purposes, since AI or user prompts is how card play
 /// is normally determined.
 #[derive(Debug, PartialEq, Clone)]
-pub struct PredeterminedController {
+pub struct PredeterminedController<D> where D: Display {
     /// The indicies for choosing [`Card`]s for a player.
     card_indices: VecDeque<usize>,
-    display: Display,
+    display: D,
 }
 
-impl PredeterminedController {
-    /// Creates a new [`PredeterminedController`] with a given array and [`Display`].
+impl<D: Display> PredeterminedController<D> {
+    /// Creates a new [`PredeterminedController`] with a given array and [`UiDisplay`].
     ///
     /// # Examples
     ///
     /// ```
     /// use std::collections::VecDeque;
-    /// use libterminal_cribbage::game::{Display, PredeterminedController};
+    /// use libterminal_cribbage::game::{UiDisplay, PredeterminedController};
     ///
-    /// let controller = PredeterminedController::new(vec![1, 2, 3], Display::new());
+    /// let controller = PredeterminedController::new(vec![1, 2, 3], UiDisplay::new());
     /// ```
-    pub fn new(card_indices: Vec<usize>, display: Display) -> PredeterminedController {
+    pub fn new(card_indices: Vec<usize>, display: D) -> PredeterminedController<D> {
         PredeterminedController {
             card_indices: VecDeque::from(card_indices),
             display,
@@ -36,7 +36,7 @@ impl PredeterminedController {
     }
 }
 
-impl Controller for PredeterminedController {
+impl<D: Display> Controller for PredeterminedController<D> {
     /// Returns a possible index for a [`Card`] for a given array of [`Card`]s.
     ///
     /// The value is the result of [`VecDeque::pop_front`] from the internal
@@ -79,7 +79,7 @@ impl Controller for PredeterminedController {
     }
 }
 
-impl From<Vec<usize>> for PredeterminedController {
+impl From<Vec<usize>> for PredeterminedController<UiDisplay> {
     /// Converts a [`Vec<usize>`] to a [`PredeterminedController`].
     ///
     /// # Examples
@@ -91,7 +91,7 @@ impl From<Vec<usize>> for PredeterminedController {
     /// let result = PredeterminedController::from(vec![1, 2, 3]);
     /// ```
     fn from(vec: Vec<usize>) -> Self {
-        PredeterminedController::new(vec, Display::new())
+        PredeterminedController::new(vec, UiDisplay::new())
     }
 }
 
@@ -104,7 +104,7 @@ mod tests {
     fn test_from_vec() {
         let expected = PredeterminedController {
             card_indices: VecDeque::from([1, 2, 3]),
-            display: Display::new(),
+            display: UiDisplay::new(),
         };
 
         let result = PredeterminedController::from(vec![1, 2, 3]);

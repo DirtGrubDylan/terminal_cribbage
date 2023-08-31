@@ -12,9 +12,11 @@ mod display;
 mod play_data;
 mod player;
 mod predetermined_controller;
+mod ui_display;
 
 pub use self::controller::Controller;
 pub use self::display::Display;
+pub use self::ui_display::UiDisplay;
 pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
@@ -34,7 +36,7 @@ where
     player_2: Player<C>,
     player_1_is_dealer: bool,
     deck: Deck,
-    display: Display,
+    display: UiDisplay,
 }
 
 impl<C> Game<C>
@@ -67,7 +69,7 @@ where
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: Display::new(),
+            display: UiDisplay::new(),
         }
     }
 
@@ -101,7 +103,7 @@ where
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: Display::new(),
+            display: UiDisplay::new(),
         }
     }
 
@@ -223,7 +225,7 @@ where
         let player_1_won = self.player_1.points >= 121;
 
         self.display
-            .println(&self.display.game_over_to_string(player_1_won));
+            .println(&self.display.game_over_message(player_1_won));
     }
 
     /// Chose dealer and pone.
@@ -245,7 +247,7 @@ where
 
         self.player_1_is_dealer = player_1_chosen_card > player_2_chosen_card;
 
-        let message = self.display.game_after_cut_to_string(
+        let message = self.display.game_after_cut_message(
             &player_1_chosen_card,
             &player_2_chosen_card,
             self.player_1_is_dealer,
@@ -293,7 +295,7 @@ where
         let mut discards = vec![];
 
         for _ in 0..2 {
-            let message = self.display.game_before_play_to_string(
+            let message = self.display.game_before_play_message(
                 /*starter=*/ None,
                 &self.player_1,
                 &self.player_2,
@@ -312,7 +314,7 @@ where
                     .expect("Player 1 Controller has no moves for first discard!"),
             );
         }
-        let message = self.display.game_before_play_to_string(
+        let message = self.display.game_before_play_message(
             /*starter=*/ None,
             &self.player_1,
             &self.player_2,
@@ -348,7 +350,7 @@ where
 
         let message =
             self.display
-                .game_before_play_to_string(Some(&starter), &self.player_1, &self.player_2);
+                .game_before_play_message(Some(&starter), &self.player_1, &self.player_2);
 
         self.display.println(&message);
 
@@ -373,7 +375,7 @@ where
         let mut play_data = PlayData::new();
 
         while self.player_1.has_cards_in_hand() || self.player_2.has_cards_in_hand() {
-            let message = self.display.game_during_play_to_string(
+            let message = self.display.game_during_play_message(
                 starter,
                 &self.player_1,
                 &self.player_2,
@@ -415,7 +417,7 @@ where
             );
         }
 
-        let message = self.display.game_during_play_to_string(
+        let message = self.display.game_during_play_message(
             starter,
             &self.player_1,
             &self.player_2,
@@ -442,7 +444,7 @@ where
         pone.points += pone.hand.total(starter, /*is_crib=*/ false);
 
         if 121 <= pone.points {
-            let message = self.display.game_during_counting_to_string(
+            let message = self.display.game_during_counting_message(
                 starter,
                 &self.player_1,
                 &self.player_2,
@@ -458,7 +460,7 @@ where
 
         let message =
             self.display
-                .game_during_counting_to_string(starter, &self.player_1, &self.player_2);
+                .game_during_counting_message(starter, &self.player_1, &self.player_2);
 
         self.display.println(&message);
     }
