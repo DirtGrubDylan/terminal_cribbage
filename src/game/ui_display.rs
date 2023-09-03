@@ -13,7 +13,7 @@ use itertools::Itertools;
 use crate::cards::Card;
 use crate::game::{Controller, Display, PlayData, Player};
 
-/// A struct for displaying the [`Game`] that uses the [`Dislay`] trait.
+/// A struct for displaying the [`Game`] that uses the [`Display`] trait.
 #[derive(Debug, PartialEq, Clone)]
 pub struct UiDisplay {
     pub joiner: String,

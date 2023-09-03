@@ -9,6 +9,7 @@
 
 mod controller;
 mod display;
+mod noop_display;
 mod play_data;
 mod player;
 mod predetermined_controller;
@@ -16,10 +17,11 @@ mod ui_display;
 
 pub use self::controller::Controller;
 pub use self::display::Display;
-pub use self::ui_display::UiDisplay;
+pub use self::noop_display::NoOpDisplay;
 pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
+pub use self::ui_display::UiDisplay;
 
 #[cfg(doc)]
 use crate::cards::Suit;
@@ -444,11 +446,9 @@ where
         pone.points += pone.hand.total(starter, /*is_crib=*/ false);
 
         if 121 <= pone.points {
-            let message = self.display.game_during_counting_message(
-                starter,
-                &self.player_1,
-                &self.player_2,
-            );
+            let message =
+                self.display
+                    .game_during_counting_message(starter, &self.player_1, &self.player_2);
 
             self.display.println(&message);
 
