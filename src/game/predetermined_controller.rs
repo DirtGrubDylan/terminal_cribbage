@@ -73,10 +73,12 @@ impl<D: Display> Controller for PredeterminedController<D> {
 
         let number_of_cards = available_cards.len();
 
-        println!(
+        let message = format!(
             "Choose Card to Discard (1 to {number_of_cards}): {:?}",
             result.map(|index| index + 1)
         );
+
+        self.display.println_no_spacer_no_delay(&message);
 
         result
     }
