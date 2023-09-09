@@ -105,14 +105,15 @@ impl Display for UiDisplay {
     /// crib. If starter is [`None`], then `"[?]"`. The player's crib will only be displayed if they
     /// have one.
     #[must_use]
-    fn game_before_play_message<C>(
+    fn game_before_play_message<C1, C2>(
         &self,
         starter: Option<&Card>,
-        player: &Player<C>,
-        opponent: &Player<C>,
+        player: &Player<C1>,
+        opponent: &Player<C2>,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         let mut result = Vec::new();
 
@@ -135,15 +136,16 @@ impl Display for UiDisplay {
     /// This will show the opponent's and player's points, but only show the player's [`Hand`] and
     /// crib. The player's crib will only be displayed if they have one.
     #[must_use]
-    fn game_during_play_message<C>(
+    fn game_during_play_message<C1, C2>(
         &self,
         starter: &Card,
-        player: &Player<C>,
-        opponent: &Player<C>,
+        player: &Player<C1>,
+        opponent: &Player<C2>,
         play_data: &PlayData,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         let mut result = Vec::new();
 
@@ -181,14 +183,15 @@ impl Display for UiDisplay {
     ///
     /// This will show the opponent's and player's points, [`Hand`]s and cribs.
     #[must_use]
-    fn game_during_counting_message<C>(
+    fn game_during_counting_message<C1, C2>(
         &self,
         starter: &Card,
-        player: &Player<C>,
-        opponent: &Player<C>,
+        player: &Player<C1>,
+        opponent: &Player<C2>,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         let mut result = Vec::new();
 

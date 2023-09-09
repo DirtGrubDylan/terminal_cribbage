@@ -37,29 +37,31 @@ impl Display for NoOpDisplay {
 
     /// Returns an empty [`String`].
     #[must_use]
-    fn game_before_play_message<C>(
+    fn game_before_play_message<C1, C2>(
         &self,
         _starter: Option<&Card>,
-        _player: &Player<C>,
-        _opponent: &Player<C>,
+        _player: &Player<C1>,
+        _opponent: &Player<C2>,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         String::new()
     }
 
     /// Returns an empty [`String`].
     #[must_use]
-    fn game_during_play_message<C>(
+    fn game_during_play_message<C1, C2>(
         &self,
         _starter: &Card,
-        _player: &Player<C>,
-        _opponent: &Player<C>,
+        _player: &Player<C1>,
+        _opponent: &Player<C2>,
         _play_data: &PlayData,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         String::new()
     }
@@ -68,14 +70,15 @@ impl Display for NoOpDisplay {
     ///
     /// This will show the opponent's and player's points, [`Hand`]s and cribs.
     #[must_use]
-    fn game_during_counting_message<C>(
+    fn game_during_counting_message<C1, C2>(
         &self,
         _starter: &Card,
-        _player: &Player<C>,
-        _opponent: &Player<C>,
+        _player: &Player<C1>,
+        _opponent: &Player<C2>,
     ) -> String
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         String::new()
     }
