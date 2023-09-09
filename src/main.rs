@@ -31,7 +31,7 @@ fn main() {
     ];
     let deck = Deck::new_with_cards(deck_cards);
 
-    let mut game = Game::new_with_deck(player_1, player_2, deck.clone());
+    let mut game = Game::new_with_deck_default(player_1, player_2, deck.clone(), UiDisplay::new());
 
     game.play(&Some(deck));
 }

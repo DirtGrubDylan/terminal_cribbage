@@ -30,19 +30,20 @@ use crate::cards::{Card, Deck, Hand, Rank};
 
 /// The struct holding all the necessary data for playing a game of cribbage.
 #[derive(Debug, PartialEq)]
-pub struct Game<C1, C2>
+pub struct Game<C1, C2, D>
 where
     C1: Controller + Clone + std::fmt::Debug,
     C2: Controller + Clone + std::fmt::Debug,
+    D: Display,
 {
     player_1: Player<C1>,
     player_2: Player<C2>,
     player_1_is_dealer: bool,
     deck: Deck,
-    display: UiDisplay,
+    display: D,
 }
 
-impl<C1, C2> Game<C1, C2>
+impl<C1, C2> Game<C1, C2, NoOpDisplay>
 where
     C1: Controller + Clone + std::fmt::Debug,
     C2: Controller + Clone + std::fmt::Debug,
@@ -63,7 +64,7 @@ where
     ///
     /// let game = Game::new(player_1, player_2);
     /// ```
-    pub fn new(player_1: Player<C1>, player_2: Player<C2>) -> Game<C1, C2> {
+    pub fn new(player_1: Player<C1>, player_2: Player<C2>) -> Game<C1, C2, NoOpDisplay> {
         let mut deck = Deck::new();
 
         deck.shuffle();
@@ -73,7 +74,7 @@ where
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: UiDisplay::new(),
+            display: NoOpDisplay::new(),
         }
     }
 
@@ -101,13 +102,95 @@ where
     ///
     /// let game = Game::new_with_deck(player_1, player_2, deck.clone());
     /// ```
-    pub fn new_with_deck(player_1: Player<C1>, player_2: Player<C2>, deck: Deck) -> Game<C1, C2> {
+    pub fn new_with_deck(
+        player_1: Player<C1>,
+        player_2: Player<C2>,
+        deck: Deck,
+    ) -> Game<C1, C2, NoOpDisplay> {
         Game {
             player_1,
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: UiDisplay::new(),
+            display: NoOpDisplay::new(),
+        }
+    }
+}
+
+impl<C1, C2, D> Game<C1, C2, D>
+where
+    C1: Controller + Clone + std::fmt::Debug,
+    C2: Controller + Clone + std::fmt::Debug,
+    D: Display,
+{
+    /// Creates a new [`Game`] with given [`Player`]s.
+    ///
+    /// The [`Deck`] is created with the [`Deck::new`] function, and then shuffled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::game::{Game, NoOpDisplay, Player, PredeterminedController};
+    ///
+    /// let display = NoOpDisplay::new();
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let game = Game::new_default(player_1, player_2, display);
+    /// ```
+    pub fn new_default(player_1: Player<C1>, player_2: Player<C2>, display: D) -> Game<C1, C2, D> {
+        let mut deck = Deck::new();
+
+        deck.shuffle();
+
+        Game {
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
+            deck,
+            display,
+        }
+    }
+
+    /// Creates a new [`Game`] with given [`Player`]s and [`Deck`].
+    ///
+    /// This is intended to be used for testing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    /// use libterminal_cribbage::game::{Game, NoOpDisplay, Player, PredeterminedController};
+    ///
+    /// let display = NoOpDisplay::new();
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let deck_cards = vec![
+    ///     Card::new(Rank::Five, Suit::Clubs),
+    ///     Card::new(Rank::Four, Suit::Diamonds),
+    ///     Card::new(Rank::Three, Suit::Hearts),
+    /// ];
+    /// let deck = Deck::new_with_cards(deck_cards);
+    ///
+    /// let game = Game::new_with_deck_default(player_1, player_2, deck.clone(), display);
+    /// ```
+    pub fn new_with_deck_default(
+        player_1: Player<C1>,
+        player_2: Player<C2>,
+        deck: Deck,
+        display: D,
+    ) -> Game<C1, C2, D> {
+        Game {
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
+            deck,
+            display,
         }
     }
 
