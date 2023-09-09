@@ -17,7 +17,6 @@ use crate::game::{Controller, Display, PlayData, Player};
 #[derive(Debug, PartialEq, Clone)]
 pub struct UiDisplay {
     pub joiner: String,
-    should_print: bool,
     post_print_delay_millis: time::Duration,
 }
 
@@ -27,14 +26,8 @@ impl UiDisplay {
     pub fn new() -> UiDisplay {
         UiDisplay {
             joiner: String::from("\n"),
-            should_print: false,
             post_print_delay_millis: time::Duration::from_millis(500),
         }
-    }
-
-    /// Turns on printing for [`Diplay`].
-    pub fn turn_on_printing(&mut self, should_print: bool) {
-        self.should_print = should_print;
     }
 
     /// The display [`String`] representation of a [`Option<&Card>`].
@@ -54,21 +47,15 @@ impl UiDisplay {
 impl Display for UiDisplay {
     /// Print message to `std::out` without a spacer or a delay.
     fn println_no_spacer_no_delay(&self, message: &str) {
-        if self.should_print {
-            println!("{message}");
-
-            thread::sleep(self.post_print_delay_millis);
-        }
+        println!("{message}");
     }
 
     /// Print message with spacer to `std::out` using [`thread::sleep`] with a delay after printing.
     fn println(&self, message: &str) {
-        if self.should_print {
-            println!("\n{}", Self::spacer());
-            println!("{message}");
+        println!("\n{}", Self::spacer());
+        println!("{message}");
 
-            thread::sleep(self.post_print_delay_millis);
-        }
+        thread::sleep(self.post_print_delay_millis);
     }
 
     /// The [`String`] display for both [`Player`]s [`Card`]s cut from the [`Deck`].

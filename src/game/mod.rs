@@ -111,26 +111,6 @@ where
         }
     }
 
-    /// Turns on printing for [`Diplay`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
-    ///
-    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
-    ///
-    /// let player_1 = Player::new(controller.clone());
-    /// let player_2 = Player::new(controller);
-    ///
-    /// let mut game = Game::new(player_1, player_2);
-    ///
-    /// game.should_print(true);
-    /// ```
-    pub fn should_print(&mut self, should_print: bool) {
-        self.display.turn_on_printing(should_print);
-    }
-
     /// Play the default game.
     ///
     /// This is simply calls [`Game::play`], but with `reset_with_deck` set to [`None`].
