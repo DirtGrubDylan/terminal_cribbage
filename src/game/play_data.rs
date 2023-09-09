@@ -103,9 +103,10 @@ impl PlayData {
     /// assert_eq!(data.stack, Vec::new());
     /// assert_eq!(data.stack_score, 0);
     /// ```
-    pub fn reset_if_needed<C>(&mut self, player_1: &Player<C>, player_2: &Player<C>) -> bool
+    pub fn reset_if_needed<C1, C2>(&mut self, player_1: &Player<C1>, player_2: &Player<C2>) -> bool
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         let mut reset = false;
 
@@ -203,9 +204,10 @@ impl PlayData {
     /// // Stack score isn't 31, but neither player can play.
     /// assert!(!data.any_can_play(&player_1, &player_2));
     /// ```
-    pub fn any_can_play<C>(&self, player_1: &Player<C>, player_2: &Player<C>) -> bool
+    pub fn any_can_play<C1, C2>(&self, player_1: &Player<C1>, player_2: &Player<C2>) -> bool
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         self.can_play(player_1) || self.can_play(player_2)
     }
@@ -267,9 +269,10 @@ impl PlayData {
     /// assert!(player_2.has_cards());
     /// assert!(player_2.has_cards_in_hand());
     /// ```
-    pub fn play_once<C>(&mut self, player: &mut Player<C>, opponent: &Player<C>)
+    pub fn play_once<C1, C2>(&mut self, player: &mut Player<C1>, opponent: &Player<C2>)
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         if self.can_play(player) {
             let card_from_players_hand = player.discard().unwrap();
@@ -324,9 +327,10 @@ impl PlayData {
     /// # Panics
     ///
     /// If, for some reason, a [`bool`] cannot be converted to a [`u32`].
-    fn go_point<C>(&self, player_1: &Player<C>, player_2: &Player<C>) -> u32
+    fn go_point<C1, C2>(&self, player_1: &Player<C1>, player_2: &Player<C2>) -> u32
     where
-        C: Controller,
+        C1: Controller,
+        C2: Controller,
     {
         u32::from(!self.any_can_play(player_1, player_2) && (self.stack_score != 31))
     }

@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use cards::Card;
-use game::Controller;
+use game::{Controller, Display, NoOpDisplay};
 
 /// A "predetermined" controller, who implements [`Controller`].
 ///
@@ -11,12 +11,35 @@ use game::Controller;
 /// This is strictly used for testing purposes, since AI or user prompts is how card play
 /// is normally determined.
 #[derive(Debug, PartialEq, Clone)]
-pub struct PredeterminedController {
+pub struct PredeterminedController<D>
+where
+    D: Display,
+{
     /// The indicies for choosing [`Card`]s for a player.
     card_indices: VecDeque<usize>,
+    display: D,
 }
 
-impl Controller for PredeterminedController {
+impl<D: Display> PredeterminedController<D> {
+    /// Creates a new [`PredeterminedController`] with a given array and [`NoOpDisplay`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::VecDeque;
+    /// use libterminal_cribbage::game::{NoOpDisplay, PredeterminedController};
+    ///
+    /// let controller = PredeterminedController::new(vec![1, 2, 3], NoOpDisplay::new());
+    /// ```
+    pub fn new(card_indices: Vec<usize>, display: D) -> PredeterminedController<D> {
+        PredeterminedController {
+            card_indices: VecDeque::from(card_indices),
+            display,
+        }
+    }
+}
+
+impl<D: Display> Controller for PredeterminedController<D> {
     /// Returns a possible index for a [`Card`] for a given array of [`Card`]s.
     ///
     /// The value is the result of [`VecDeque::pop_front`] from the internal
@@ -45,13 +68,26 @@ impl Controller for PredeterminedController {
     /// assert_eq!(controller.get_card_index(&available_cards), Some(2));
     /// assert_eq!(controller.get_card_index(&available_cards), None);
     /// ```
-    fn get_card_index(&mut self, _available_cards: &[Card]) -> Option<usize> {
-        self.card_indices.pop_front()
+    fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize> {
+        let result = self.card_indices.pop_front();
+
+        let number_of_cards = available_cards.len();
+
+        let message = format!(
+            "Choose Card to Discard (1 to {number_of_cards}): {:?}",
+            result.map(|index| index + 1)
+        );
+
+        self.display.println_no_spacer_no_delay(&message);
+
+        result
     }
 }
 
-impl From<Vec<usize>> for PredeterminedController {
+impl From<Vec<usize>> for PredeterminedController<NoOpDisplay> {
     /// Converts a [`Vec<usize>`] to a [`PredeterminedController`].
+    ///
+    /// The [`Display`] is set to a [`NoOpDisplay`].
     ///
     /// # Examples
     ///
@@ -62,9 +98,7 @@ impl From<Vec<usize>> for PredeterminedController {
     /// let result = PredeterminedController::from(vec![1, 2, 3]);
     /// ```
     fn from(vec: Vec<usize>) -> Self {
-        let card_indices = VecDeque::from(vec);
-
-        PredeterminedController { card_indices }
+        PredeterminedController::new(vec, NoOpDisplay::new())
     }
 }
 
@@ -77,6 +111,7 @@ mod tests {
     fn test_from_vec() {
         let expected = PredeterminedController {
             card_indices: VecDeque::from([1, 2, 3]),
+            display: NoOpDisplay::new(),
         };
 
         let result = PredeterminedController::from(vec![1, 2, 3]);

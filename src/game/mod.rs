@@ -9,15 +9,19 @@
 
 mod controller;
 mod display;
+mod noop_display;
 mod play_data;
 mod player;
 mod predetermined_controller;
+mod ui_display;
 
 pub use self::controller::Controller;
 pub use self::display::Display;
+pub use self::noop_display::NoOpDisplay;
 pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
+pub use self::ui_display::UiDisplay;
 
 #[cfg(doc)]
 use crate::cards::Suit;
@@ -26,20 +30,23 @@ use crate::cards::{Card, Deck, Hand, Rank};
 
 /// The struct holding all the necessary data for playing a game of cribbage.
 #[derive(Debug, PartialEq)]
-pub struct Game<C>
+pub struct Game<C1, C2, D>
 where
-    C: Controller + Clone + std::fmt::Debug,
+    C1: Controller + Clone + std::fmt::Debug,
+    C2: Controller + Clone + std::fmt::Debug,
+    D: Display,
 {
-    player_1: Player<C>,
-    player_2: Player<C>,
+    player_1: Player<C1>,
+    player_2: Player<C2>,
     player_1_is_dealer: bool,
     deck: Deck,
-    display: Display,
+    display: D,
 }
 
-impl<C> Game<C>
+impl<C1, C2> Game<C1, C2, NoOpDisplay>
 where
-    C: Controller + Clone + std::fmt::Debug,
+    C1: Controller + Clone + std::fmt::Debug,
+    C2: Controller + Clone + std::fmt::Debug,
 {
     /// Creates a new [`Game`] with given [`Player`]s.
     ///
@@ -57,7 +64,7 @@ where
     ///
     /// let game = Game::new(player_1, player_2);
     /// ```
-    pub fn new(player_1: Player<C>, player_2: Player<C>) -> Game<C> {
+    pub fn new(player_1: Player<C1>, player_2: Player<C2>) -> Game<C1, C2, NoOpDisplay> {
         let mut deck = Deck::new();
 
         deck.shuffle();
@@ -67,7 +74,7 @@ where
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: Display::new(),
+            display: NoOpDisplay::new(),
         }
     }
 
@@ -95,34 +102,96 @@ where
     ///
     /// let game = Game::new_with_deck(player_1, player_2, deck.clone());
     /// ```
-    pub fn new_with_deck(player_1: Player<C>, player_2: Player<C>, deck: Deck) -> Game<C> {
+    pub fn new_with_deck(
+        player_1: Player<C1>,
+        player_2: Player<C2>,
+        deck: Deck,
+    ) -> Game<C1, C2, NoOpDisplay> {
         Game {
             player_1,
             player_2,
             player_1_is_dealer: true,
             deck,
-            display: Display::new(),
+            display: NoOpDisplay::new(),
         }
     }
+}
 
-    /// Turns on printing for [`Diplay`].
+impl<C1, C2, D> Game<C1, C2, D>
+where
+    C1: Controller + Clone + std::fmt::Debug,
+    C2: Controller + Clone + std::fmt::Debug,
+    D: Display,
+{
+    /// Creates a new [`Game`] with given [`Player`]s.
+    ///
+    /// The [`Deck`] is created with the [`Deck::new`] function, and then shuffled.
     ///
     /// # Examples
     ///
     /// ```
-    /// use libterminal_cribbage::game::{Game, Player, PredeterminedController};
+    /// use libterminal_cribbage::game::{Game, NoOpDisplay, Player, PredeterminedController};
     ///
+    /// let display = NoOpDisplay::new();
     /// let controller = PredeterminedController::from(vec![0, 1, 2]);
     ///
     /// let player_1 = Player::new(controller.clone());
     /// let player_2 = Player::new(controller);
     ///
-    /// let mut game = Game::new(player_1, player_2);
-    ///
-    /// game.should_print(true);
+    /// let game = Game::new_default(player_1, player_2, display);
     /// ```
-    pub fn should_print(&mut self, should_print: bool) {
-        self.display.turn_on_printing(should_print);
+    pub fn new_default(player_1: Player<C1>, player_2: Player<C2>, display: D) -> Game<C1, C2, D> {
+        let mut deck = Deck::new();
+
+        deck.shuffle();
+
+        Game {
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
+            deck,
+            display,
+        }
+    }
+
+    /// Creates a new [`Game`] with given [`Player`]s and [`Deck`].
+    ///
+    /// This is intended to be used for testing.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
+    /// use libterminal_cribbage::game::{Game, NoOpDisplay, Player, PredeterminedController};
+    ///
+    /// let display = NoOpDisplay::new();
+    /// let controller = PredeterminedController::from(vec![0, 1, 2]);
+    ///
+    /// let player_1 = Player::new(controller.clone());
+    /// let player_2 = Player::new(controller);
+    ///
+    /// let deck_cards = vec![
+    ///     Card::new(Rank::Five, Suit::Clubs),
+    ///     Card::new(Rank::Four, Suit::Diamonds),
+    ///     Card::new(Rank::Three, Suit::Hearts),
+    /// ];
+    /// let deck = Deck::new_with_cards(deck_cards);
+    ///
+    /// let game = Game::new_with_deck_default(player_1, player_2, deck.clone(), display);
+    /// ```
+    pub fn new_with_deck_default(
+        player_1: Player<C1>,
+        player_2: Player<C2>,
+        deck: Deck,
+        display: D,
+    ) -> Game<C1, C2, D> {
+        Game {
+            player_1,
+            player_2,
+            player_1_is_dealer: true,
+            deck,
+            display,
+        }
     }
 
     /// Play the default game.
@@ -223,7 +292,7 @@ where
         let player_1_won = self.player_1.points >= 121;
 
         self.display
-            .println(&self.display.game_over_to_string(player_1_won));
+            .println(&self.display.game_over_message(player_1_won));
     }
 
     /// Chose dealer and pone.
@@ -245,21 +314,13 @@ where
 
         self.player_1_is_dealer = player_1_chosen_card > player_2_chosen_card;
 
-        let message = self.display.game_after_cut_to_string(
+        let message = self.display.game_after_cut_message(
             &player_1_chosen_card,
             &player_2_chosen_card,
             self.player_1_is_dealer,
         );
 
         self.display.println(&message);
-
-        // Maybe do a memswap instead
-        if !self.player_1_is_dealer {
-            let temp_player = self.player_1.clone();
-
-            self.player_1 = self.player_2.clone();
-            self.player_2 = temp_player;
-        }
     }
 
     /// Indicates that the game is won by [`Deck::dealer`] or [`Deck::pone`].
@@ -293,7 +354,7 @@ where
         let mut discards = vec![];
 
         for _ in 0..2 {
-            let message = self.display.game_before_play_to_string(
+            let message = self.display.game_before_play_message(
                 /*starter=*/ None,
                 &self.player_1,
                 &self.player_2,
@@ -312,7 +373,7 @@ where
                     .expect("Player 1 Controller has no moves for first discard!"),
             );
         }
-        let message = self.display.game_before_play_to_string(
+        let message = self.display.game_before_play_message(
             /*starter=*/ None,
             &self.player_1,
             &self.player_2,
@@ -348,7 +409,7 @@ where
 
         let message =
             self.display
-                .game_before_play_to_string(Some(&starter), &self.player_1, &self.player_2);
+                .game_before_play_message(Some(&starter), &self.player_1, &self.player_2);
 
         self.display.println(&message);
 
@@ -373,7 +434,9 @@ where
         let mut play_data = PlayData::new();
 
         while self.player_1.has_cards_in_hand() || self.player_2.has_cards_in_hand() {
-            let message = self.display.game_during_play_to_string(
+            let turn_is_odd = (turn % 2) == 1;
+
+            let message = self.display.game_during_play_message(
                 starter,
                 &self.player_1,
                 &self.player_2,
@@ -382,16 +445,11 @@ where
 
             self.display.println(&message);
 
-            let (dealer, pone) = if self.player_1_is_dealer {
-                (&mut self.player_1, &mut self.player_2)
+            // Player 1's turn (i.e. TURN_IS_ODD XNOR PLAYER_1_IS_DEALER).
+            if turn_is_odd == self.player_1_is_dealer {
+                play_data.play_once(&mut self.player_1, &self.player_2);
             } else {
-                (&mut self.player_2, &mut self.player_1)
-            };
-
-            match turn % 2 {
-                0 => play_data.play_once(pone, dealer),
-                1 => play_data.play_once(dealer, pone),
-                _ => panic!("Something went wrong with alternating turns: {}", turn),
+                play_data.play_once(&mut self.player_2, &self.player_1);
             }
 
             if (121 <= self.player_1.points) || (121 <= self.player_2.points) {
@@ -415,7 +473,7 @@ where
             );
         }
 
-        let message = self.display.game_during_play_to_string(
+        let message = self.display.game_during_play_message(
             starter,
             &self.player_1,
             &self.player_2,
@@ -433,32 +491,39 @@ where
     /// The [`Player`]s [`Hand`]s/cribs are scored, with the starter [`Card`], starting with the
     /// Pone.
     fn run_counting_round(&mut self, starter: &Card) {
-        let (dealer, pone) = if self.player_1_is_dealer {
-            (&mut self.player_1, &mut self.player_2)
+        let pone_points = if self.player_1_is_dealer {
+            self.player_2.points += self.player_2.hand.total(starter, /*is_crib=*/ false);
+
+            self.player_2.points
         } else {
-            (&mut self.player_2, &mut self.player_1)
+            self.player_1.points += self.player_1.hand.total(starter, /*is_crib=*/ false);
+
+            self.player_1.points
         };
 
-        pone.points += pone.hand.total(starter, /*is_crib=*/ false);
-
-        if 121 <= pone.points {
-            let message = self.display.game_during_counting_to_string(
-                starter,
-                &self.player_1,
-                &self.player_2,
-            );
+        // Skip counting dealer's hand if Pone has won.
+        if 121 <= pone_points {
+            let message =
+                self.display
+                    .game_during_counting_message(starter, &self.player_1, &self.player_2);
 
             self.display.println(&message);
 
             return;
         }
 
-        dealer.points += dealer.hand.total(starter, /*is_crib=*/ false);
-        dealer.points += dealer.crib.total(starter, /*is_crib=*/ true);
+        // Player 1 is dealer.
+        if self.player_1_is_dealer {
+            self.player_1.points += self.player_1.hand.total(starter, /*is_crib=*/ false);
+            self.player_1.points += self.player_1.crib.total(starter, /*is_crib=*/ true);
+        } else {
+            self.player_2.points += self.player_2.hand.total(starter, /*is_crib=*/ false);
+            self.player_2.points += self.player_2.crib.total(starter, /*is_crib=*/ true);
+        }
 
         let message =
             self.display
-                .game_during_counting_to_string(starter, &self.player_1, &self.player_2);
+                .game_during_counting_message(starter, &self.player_1, &self.player_2);
 
         self.display.println(&message);
     }
@@ -601,8 +666,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.player_1, expected_player_2);
-        assert_eq!(game.player_2, expected_player_1);
+        assert_eq!(game.player_1, expected_player_1);
+        assert_eq!(game.player_2, expected_player_2);
     }
 
     #[test]
@@ -634,8 +699,8 @@ mod tests {
         game.choose_dealer();
 
         assert_eq!(game.deck, deck);
-        assert_eq!(game.player_1, expected_player_2);
-        assert_eq!(game.player_2, expected_player_1);
+        assert_eq!(game.player_1, expected_player_1);
+        assert_eq!(game.player_2, expected_player_2);
     }
 
     #[test]
