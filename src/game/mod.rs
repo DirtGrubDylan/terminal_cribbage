@@ -445,12 +445,18 @@ where
                 &play_data,
             );
 
-            self.display.println(&message);
-
             // Player 1's turn (i.e. TURN_IS_ODD XNOR PLAYER_1_IS_DEALER).
             if turn_is_odd == self.player_1_is_dealer {
+                if self.player_1.has_cards() {
+                    self.display.println(&message);
+                }
+
                 play_data.play_once(&mut self.player_1, &self.player_2);
             } else {
+                if self.player_2.has_cards() {
+                    self.display.println(&message);
+                }
+
                 play_data.play_once(&mut self.player_2, &self.player_1);
             }
 
