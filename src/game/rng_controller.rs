@@ -17,7 +17,6 @@ impl RngController {
     /// # Examples
     ///
     /// ```
-    /// use std::collections::VecDeque;
     /// use libterminal_cribbage::game::RngController;
     ///
     /// let controller = RngController::new();
@@ -45,6 +44,7 @@ impl Controller for RngController {
     /// use libterminal_cribbage::cards::{Card, Rank, Suit};
     /// use libterminal_cribbage::game::{Controller, RngController};
     ///
+    /// let no_cards = vec![];
     /// let available_cards = vec![
     ///     Card::new(Rank::Queen, Suit::Hearts),
     ///     Card::new(Rank::King, Suit::Clubs),
@@ -52,6 +52,7 @@ impl Controller for RngController {
     ///
     /// let mut controller = RngController::new();
     ///
+    /// assert!(controller.get_card_index(&no_cards).is_none());
     /// assert!(controller.get_card_index(&available_cards).is_some());
     /// ```
     #[must_use]
