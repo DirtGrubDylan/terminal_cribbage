@@ -473,9 +473,9 @@ where
 
             let reset = play_data.reset_if_needed(&self.player_1, &self.player_2);
 
-            if reset {
+            if reset && (self.player_1.has_cards() || self.player_2.has_cards()) {
                 self.display.println(&(message + "\nGO!"));
-            } else {
+            } else if !reset {
                 turn += 1;
             }
 
