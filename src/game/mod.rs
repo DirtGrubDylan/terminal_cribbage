@@ -458,9 +458,18 @@ where
                 break;
             }
 
+            let message = self.display.game_during_play_message(
+                starter,
+                &self.player_1,
+                &self.player_2,
+                &play_data,
+            );
+
             let reset = play_data.reset_if_needed(&self.player_1, &self.player_2);
 
-            if !reset {
+            if reset {
+                self.display.println(&message);
+            } else {
                 turn += 1;
             }
 
