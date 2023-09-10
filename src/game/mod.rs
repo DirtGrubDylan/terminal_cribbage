@@ -13,6 +13,7 @@ mod noop_display;
 mod play_data;
 mod player;
 mod predetermined_controller;
+mod rng_controller;
 mod ui_display;
 
 pub use self::controller::Controller;
@@ -21,6 +22,7 @@ pub use self::noop_display::NoOpDisplay;
 pub use self::play_data::PlayData;
 pub use self::player::Player;
 pub use self::predetermined_controller::PredeterminedController;
+pub use self::rng_controller::RngController;
 pub use self::ui_display::UiDisplay;
 
 #[cfg(doc)]
