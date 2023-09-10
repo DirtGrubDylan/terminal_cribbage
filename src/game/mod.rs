@@ -468,7 +468,7 @@ where
             let reset = play_data.reset_if_needed(&self.player_1, &self.player_2);
 
             if reset {
-                self.display.println(&message + "\nGO!");
+                self.display.println(&(message + "\nGO!"));
             } else {
                 turn += 1;
             }
