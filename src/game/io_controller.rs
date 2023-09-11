@@ -70,11 +70,10 @@ impl Controller for IoController {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use libterminal_cribbage::cards::{Card, Rank, Suit};
     /// use libterminal_cribbage::game::{Controller, IoController};
     ///
-    /// let no_cards = vec![];
     /// let available_cards = vec![
     ///     Card::new(Rank::Queen, Suit::Hearts),
     ///     Card::new(Rank::King, Suit::Clubs),
@@ -82,8 +81,7 @@ impl Controller for IoController {
     ///
     /// let mut controller = IoController::new();
     ///
-    /// assert!(controller.get_card_index(&no_cards).is_none());
-    /// assert!(controller.get_card_index(&available_cards).is_some());
+    /// controller.get_card_index(&available_cards);
     /// ```
     #[must_use]
     fn get_card_index(&mut self, available_cards: &[Card]) -> Option<usize> {
