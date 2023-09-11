@@ -9,6 +9,11 @@ use crate::game::{Controller, PlayData, Player};
 
 /// The `trait` for controlling how the game is displayed.
 pub trait Display {
+    /// Flushes stdout.
+    ///
+    /// # Errors
+    ///
+    /// If there was an issue flushing using [`io::Stdout`].
     fn flush_stdout(&self) -> io::Result<()> {
         io::stdout().flush()
     }
