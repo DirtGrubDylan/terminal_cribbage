@@ -1,7 +1,9 @@
 extern crate libterminal_cribbage;
 
 use libterminal_cribbage::cards::{Card, Deck, Rank, Suit};
-use libterminal_cribbage::game::{Game, Player, PredeterminedController, RngController, UiDisplay};
+use libterminal_cribbage::game::{
+    Game, IoController, Player, PredeterminedController, RngController, UiDisplay,
+};
 
 fn main() {
     let _player_1_controller = PredeterminedController::new(
@@ -11,7 +13,7 @@ fn main() {
     let _player_2_controller =
         PredeterminedController::from(vec![2, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0, 0, 0, 5, 4, 0, 0]);
 
-    let player_1 = Player::new(RngController::new());
+    let player_1 = Player::new(IoController::new());
     let player_2 = Player::new(RngController::new());
 
     let deck_cards = vec![

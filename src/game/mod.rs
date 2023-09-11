@@ -9,6 +9,7 @@
 
 mod controller;
 mod display;
+mod io_controller;
 mod noop_display;
 mod play_data;
 mod player;
@@ -18,6 +19,7 @@ mod ui_display;
 
 pub use self::controller::Controller;
 pub use self::display::Display;
+pub use self::io_controller::IoController;
 pub use self::noop_display::NoOpDisplay;
 pub use self::play_data::PlayData;
 pub use self::player::Player;
@@ -447,13 +449,13 @@ where
 
             // Player 1's turn (i.e. TURN_IS_ODD XNOR PLAYER_1_IS_DEALER).
             if turn_is_odd == self.player_1_is_dealer {
-                if self.player_1.has_cards() {
+                if self.player_1.has_cards_in_hand() {
                     self.display.println(&message);
                 }
 
                 play_data.play_once(&mut self.player_1, &self.player_2);
             } else {
-                if self.player_2.has_cards() {
+                if self.player_2.has_cards_in_hand() {
                     self.display.println(&message);
                 }
 
@@ -473,7 +475,7 @@ where
 
             let reset = play_data.reset_if_needed(&self.player_1, &self.player_2);
 
-            if reset && (self.player_1.has_cards() || self.player_2.has_cards()) {
+            if reset && (self.player_1.has_cards_in_hand() || self.player_2.has_cards_in_hand()) {
                 self.display.println(&(message + "\nGO!"));
             } else if !reset {
                 turn += 1;

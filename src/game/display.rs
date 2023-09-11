@@ -1,4 +1,5 @@
 //! Trait for displaying the game.
+use std::io::{self, Write};
 
 #[cfg(doc)]
 use crate::cards::Hand;
@@ -8,6 +9,13 @@ use crate::game::{Controller, PlayData, Player};
 
 /// The `trait` for controlling how the game is displayed.
 pub trait Display {
+    fn flush_stdout(&self) -> io::Result<()> {
+        io::stdout().flush()
+    }
+
+    /// Print message to `std::out` without a new line, a spacer, or a delay.
+    fn print_no_spacer_no_delay(&self, message: &str);
+
     /// Print message to `std::out` without a spacer or a delay.
     fn println_no_spacer_no_delay(&self, message: &str);
 

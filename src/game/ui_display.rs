@@ -45,6 +45,11 @@ impl UiDisplay {
 }
 
 impl Display for UiDisplay {
+    /// Print message to `std::out` without a new line, a spacer, or a delay.
+    fn print_no_spacer_no_delay(&self, message: &str) {
+        print!("{message}");
+    }
+
     /// Print message to `std::out` without a spacer or a delay.
     fn println_no_spacer_no_delay(&self, message: &str) {
         println!("{message}");
