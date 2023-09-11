@@ -19,6 +19,9 @@ impl NoOpDisplay {
 
 impl Display for NoOpDisplay {
     /// Does nothing.
+    fn print_no_spacer_no_delay(&self, _message: &str) {}
+
+    /// Does nothing.
     fn println_no_spacer_no_delay(&self, _message: &str) {}
 
     /// Does nothing.
